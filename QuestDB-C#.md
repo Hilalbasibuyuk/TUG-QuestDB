@@ -14,4 +14,3 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 
 ### Ana özellikleri şunlardır:
 - Çok hızlı yazma ve okuma (milyonlarca kayıt/saniye işleyebilir).
-- 
