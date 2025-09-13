@@ -14,3 +14,5 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 
 ### Ana özellikleri şunlardır:
 - Çok hızlı yazma ve okuma (milyonlarca kayıt/saniye işleyebilir).
+- Kolay entegrasyon (Postgres wire protocol, REST API, InfluxDB line protocol desteği).
+- Yeni kayıtlar her zaman sona eklenir. Bu da diskte sıralı yazmaya izin verir → SSD/HDD için maksimum hız.
