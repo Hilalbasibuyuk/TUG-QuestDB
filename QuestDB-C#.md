@@ -16,3 +16,9 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 - Çok hızlı yazma ve okuma (milyonlarca kayıt/saniye işleyebilir).
 - Kolay entegrasyon (Postgres wire protocol, REST API, InfluxDB line protocol desteği).
 - Yeni kayıtlar her zaman sona eklenir. Bu da diskte sıralı yazmaya izin verir → SSD/HDD için maksimum hız.
+
+
+
+## QuestDB and C#
+C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir.
+En sağlam yöntem → ADO.NET + Dapper.
