@@ -18,8 +18,6 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 - Yüksek performanslı veri çoğaltma ve sıra dışı dizinleme
 - Yüksek veri kardinalitesi performans düşüşüne yol açmayacaktır.(Kardinalite, bir kümeyi oluşturan farklı değer sayısını gösteren bir veri niteliğidir. Yüksek kardinaliteli verilere sahip olmak, veri kümesinde çok sayıda benzersiz değer olduğu anlamına gelir.)
 - Donanım verimliliği (Sensörler ve Raspberry Pi dahil olmak üzere çok küçük donanımlarda güçlü, maliyet tasarrufu sağlayan performans.)
-- 
-- 
 
 
 **QuestDB'de yüksek kardinalite ile başa çıkma**
@@ -80,8 +78,75 @@ Web Console will be available at http://[server-address]:9000. When running loca
 Grafana, verileri görselleştirmek ve zaman serisi veri analizini etkinleştirmek için kullanılan popüler bir gözlemlenebilirlik ve izleme uygulamasıdır. 
 
 
+## Rest API
+QuestDB REST API, standart HTTP özelliklerine dayanır ve hazır HTTP istemcileri tarafından anlaşılır. QuestDB ile etkileşim kurmanın basit bir yolunu sunar ve çoğu programlama diliyle uyumludur. API işlevleri URL'ye tam olarak bağlıdır ve argüman olarak sorgu parametrelerini kullanır.
+
+**Mevcut yöntemler**
+### /imp (Import data) for importing data from .CSV files.
+Tablo biçimindeki metin verilerini doğrudan bir tabloya aktarır. İsteğe bağlı başlıklarla CSV, TAB ve boru ( ) ile ayrılmış girdileri destekler . Veri boyutu konusunda herhangi bir kısıtlama yoktur. Veri türleri ve yapıları, ek yapılandırmaya gerek kalmadan otomatik olarak algılanır.
+
+**Örnek kullanım:**
+```bash
+curl -F data=@weather.csv \
+'http://localhost:9000/imp?overwrite=true&name=new_table&timestamp=ts&partitionBy=MONTH'
+
+# Standart dışı zaman damgasına sahip CSV'yi içe aktarma
+curl -F data=@weather.csv 'http://localhost:9000/imp'
+
+#User defined schema
+curl \
+-F schema='[{"name":"dewpF", "type": "STRING"}]' \
+-F data=@weather.csv 'http://localhost:9000/imp'
+```
 
 
+### /exec to execute a SQL statement.
+SQL INSERT Query, Giriş noktası bir SQL sorgusu alır ve sonuçları JSON olarak döndürür. Bunu hızlı SQL eklemeleri için de kullanabiliriz, ancak SQL enjeksiyonu sorunlarından kaçınmak için gerekli olan parametreli sorgular için destek olmadığını unutmayın. Yüksek performanslı eklemelere ihtiyacınız varsa **InfluxDB Satır Protokolünü** tercih edin.
+
+**Örnek kullanım:**
+
+
+```bash
+# Tablo Oluşturma
+curl -G \
+  --data-urlencode "query=CREATE TABLE IF NOT EXISTS trades(name STRING, value INT)" \
+  http://localhost:9000/exec
+
+# Satır Ekleme
+curl -G \
+  --data-urlencode "query=INSERT INTO trades VALUES('abc', 123456)" \
+  http://localhost:9000/exec
+```
+
+  
+
+### /exp to Export Data.
+Bu uç nokta, URL kodlu sorguları geçirmenize olanak tanır ancak istek gövdesi, JSON'un aksine kaydedilip yeniden kullanılmak üzere tablo biçiminde döndürülür.
+
+
+### REST API supports two authentication types:
+- HTTP basic authentication
+- Token-based authentication
+
+İlk kimlik doğrulama türü çoğunlukla web tarayıcıları tarafından desteklenir. Ancak, kullanıcı kimlik bilgilerini bir başlıkta programatik olarak da uygulayabilirsiniz.(Authorization: Basic)
+
+```bash
+curl -G --data-urlencode "query=SELECT 1;" \
+    -u "my_user:my_password" \
+    http://localhost:9000/exec
+```
+
+İkinci kimlik doğrulama türü, bir REST API belirtecinin bir başlıkta belirtilmesini gerektirir  (Authorization: Bearer header)
+```bash
+curl -G --data-urlencode "query=SELECT 1;" \
+    -H "Authorization: Bearer qt1cNK6s2t79f76GmTBN9k7XTWm5wwOtF7C0UBxiHGPn44" \
+    http://localhost:9000/exec
+```
+
+
+
+
+### Authentication(RBAC(Role-based Access Control))
 
 ## QuestDB and C#
 C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir.
@@ -100,4 +165,8 @@ Grafana konusuna bakıcam(Docker ile çalışıyor)
 - https://grafana.com/grafana/plugins/questdb-questdb-datasource/    -> Grafana kullanımı
 - https://questdb.com/docs/third-party-tools/grafana/   -> Grafana kullanımı
 - https://demo.questdb.io/index.html   -> Görselleştirme yapılabilir bu yapı kullanılarak
+- https://questdb.com/docs/reference/sql/datatypes/   -> QuestDB veri yapıları listesi
+- 
+
+
 
