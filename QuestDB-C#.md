@@ -99,4 +99,5 @@ Grafana konusuna bakıcam(Docker ile çalışıyor)
 - https://questdb.com/dashboards/fx-orderbook/    -> Canlı fx-orderbook verileri
 - https://grafana.com/grafana/plugins/questdb-questdb-datasource/    -> Grafana kullanımı
 - https://questdb.com/docs/third-party-tools/grafana/   -> Grafana kullanımı
+- https://demo.questdb.io/index.html   -> Görselleştirme yapılabilir bu yapı kullanılarak
 
