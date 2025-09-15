@@ -54,11 +54,11 @@ QuestDB, her örnek için tek bir veritabanına sahiptir . PostgreSQL ve diğer 
 Varsayılan veritabanının adı'dır qdbve bu, yapılandırma aracılığıyla değiştirilebilir. Ancak, standart bir SQL veritabanının aksine, USE DATABASEkomut vermenize gerek yoktur. Bağlandıktan sonra, hemen sorgulamaya ve veri eklemeye başlayabilirsiniz.
 
 
-### Şema oluşturma:
+## Şema oluşturma:
 **Önerilen yaklaşım**
 Bir şema oluşturmanın en kolay yolu Web Konsolunu kullanmak veya şu SQL komutlarını göndermektir:
-REST API ( CREATE TABLE ifadeler)
-PostgreSQL kablolu protokol istemcileri
+- REST API ( CREATE TABLE ifadeler)
+- PostgreSQL kablolu protokol istemcileri
 
 
 **Accessing the Web Console**
@@ -120,7 +120,7 @@ curl -G \
 
   
 ### /exp to Export Data.
-Bu uç nokta, URL kodlu sorguları geçirmenize olanak tanır ancak istek gövdesi, JSON'un aksine kaydedilip yeniden kullanılmak üzere tablo biçiminde döndürülür.
+Bu uç nokta, URL kodlu sorguları geçirmenize olanak tanır ancak istek gövdesi, JSON'un aksine kaydedilip yeniden kullanılmak üzere tablo biçiminde döndürülür. Veritabanını bir SQL select sorgusu ile sorgulamaya ve sonuçları CSV olarak almaya olanak tanır. Sonuçları JSON formatında almak için /exec kullanırız.
 
 ```bash
 # Sorguyu göz önünde bulundurarak:
@@ -132,8 +132,9 @@ curl -G \
 ```
 
 
+### Authentication(RBAC(Role-based Access Control))
 
-### REST API supports two authentication types:
+#### REST API supports two authentication types:
 - HTTP basic authentication
 - Token-based authentication
 
@@ -152,10 +153,72 @@ curl -G --data-urlencode "query=SELECT 1;" \
     http://localhost:9000/exec
 ```
 
+## PostgreSQL kablolu protokol istemcileri
+### PostgreSQL ve PGWire
+
+QuestDB, veri girişi için Postgres Wire Protokolünü (PGWire) destekler. PGWire (Postgres Wire Protokolü) PostgreSQL'in istemci-sunucu iletişim protokolüdür. Sorgulama ve veri çıkışı için QuestDB, PostgreSQL protokolüyle uyumludur. Bu, QuestDB ile favori PostgreSQL istemcinizi veya sürücünüzü kullanabileceğiniz anlamına gelir. PGWire arayüzü, öncelikle QuestDB'den veri sorgulamak için önerilir. Veri alımı, özellikle yüksek verimli senaryolar için QuestDB, InfluxDB Hat Protokolü'nü (ILP) destekleyen istemcilerinin kullanılmasını önerir . Bu istemciler, hızlı veri girişi için optimize edilmiştir.
+
+**Not:** PostgreSQL depolama modeli QuestDB'den temel olarak farklıdır. Sonuç olarak PostgreSQL için var olan bazı özellikler QuestDB'de bulunmamaktadır.
+
+
+### PGWire İstemcisine Genel Bakış:
+QuestDB, istemcilerin PostgreSQL istemci kitaplıklarını kullanarak QuestDB'ye bağlanmasını sağlamak için PostgreSQL kablolu protokolünü (PGWire) kullanır. Bu, mevcut PostgreSQL istemcilerini ve kitaplıklarını kullanmanıza olanak tanıdığı için QuestDB'yi kullanmaya başlamak için harika bir yoldur. 
+
+#### Sorgulama ve veri arayüzü
+PGWire arayüzü, öncelikle QuestDB'den veri sorgulamak için önerilir. Veri alımı, özellikle yüksek verimli senaryolar için QuestDB, InfluxDB Hat Protokolü'nü (ILP) destekleyen istemcilerinin kullanılmasını önerir . Bu istemciler, hızlı veri girişi için optimize edilmiştir.
+
+
+#### Zaman dalgası işleme
+QuestDB, tüm zaman damgalarını dahili olarak UTC(Coordinated Universal Time) olarak depolar . Ancak, zaman damgalarını PGWire protokolü üzerinden iletirken QuestDB bunları "TIMESTAMP WITHOUT TIMEZONE" olarak gösterir. Bu durum, istemci kütüphanelerinin bu zaman damgalarını varsayılan olarak kendi yerel saat dilimlerinde yorumlamasına ve bu da olası karışıklığa veya hatalı veri gösterimine yol açabilir. Dil özelindeki kılavuzlarımız, istemcinizin bu zaman damgalarını UTC olarak doğru şekilde yorumlayacak şekilde nasıl yapılandırılacağına dair ayrıntılı örnekler sunar.
+
+Mevcut davranış şu an iyileştirilmeye çalışılıyor. Bu arada, zaman damgalarının tutarlı bir şekilde işlenmesini sağlamak için istemci kitaplığınızdaki saat dilimini UTC olarak ayarlamanızı öneririz.
+
+#### Yalnızca İleri İmleçler
+QuestDB'nin imleçleri yalnızca ileriye yöneliktir ve bu, PostgreSQL'in kaydırılabilir imleç desteğinden (çift yönlü gezinme ve rastgele satır erişimi sağlar) farklıdır. QuestDB ile sorgu sonuçlarında baştan sona sırayla gezinebilirsiniz, ancak geriye gidemez veya belirli satırlara atlayamazsınız. Kaydırılabilir türler için açık DECLARE CURSOR ifadeleri veya ters yönde getirme gibi işlemler (örneğin, Çalışma Alanı BACKWARD) desteklenmez.
+Bu sınırlama, kaydırılabilir imleç özelliklerine dayanan istemci kitaplıklarını etkileyebilir. Örneğin, Python'ın psycopg2 sürücüsü bu tür işlemleri denediğinde sorunlarla karşılaşabilir. En iyi uyumluluk için sürücüleri seçin veya mevcut sürücüleri, Python'ın asyncpg sürücüsü gibi yalnızca ileri imleçleri kullanacak şekilde yapılandırın.
 
 
 
-### Authentication(RBAC(Role-based Access Control))
+
+### Kullanım Senaryoları
+- Time-series analytics için QuestDB kullanımı
+
+- Mevcut PostgreSQL tool'ları ile QuestDB'ye erişim
+
+- High-throughput data ingestion ve analiz
+
+
+### List of supported features:
+- Sorgulama (tüm tipler hariç BLOB)
+- Bağlama parametreleriyle hazırlanmış ifadeler
+- INSERT bağlama parametreli ifadeler
+- UPDATE bağlama parametreli ifadeler
+- DDL yürütme
+- Toplu ekler
+- Düz kimlik doğrulama
+
+
+### List of unsupported features
+- SSL
+- Remote file upload (COPY from stdin)
+- DELETE statements
+- BLOB transfer
+
+
+
+## ILP Protokolü ile Şema otomatik oluşturma
+Influx Line Protocol (ILP) kullanıldığında , QuestDB gelen verilere göre otomatik olarak tablolar ve sütunlar oluşturur.Bu özellik, InfluxDB'den geçiş yapan veya InfluxDB istemci kütüphaneleri ya da Telegraf gibi araçlar kullanan kullanıcılar için kullanışlıdır , çünkü önceden tanımlanmış şemalar olmadan verileri doğrudan QuestDB'ye gönderebilirler. Ancak bunun bazı sınırlamaları vardır:
+- QuestDB, otomatik olarak oluşturulan tablolara ve sütunlara varsayılan ayarları uygular (örneğin, bölümlendirme, sembol kapasitesi ve veri türleri).
+- Bölümlemeyi veya sembol kapasitesini daha sonra değiştiremezsiniz .
+- Veri türünü otomatik olarak oluşturamazsınız IPv4. Bir IP adresini dize olarak göndermek bir sütun oluşturacaktır VARCHAR.
+Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirsiniz . QuestDB, verileri almak için InfluxDB Hat Protokolünü uygular. InfluxDB Hat Protokolü yalnızca veri alımı içindir Her ILP istemci kütüphanesinin ayrıca kendi dil özelinde dokümantasyon seti vardır. Bu destekleyici belge, müşteri seçimi ve ilk yapılandırmada yardımcı olmak için genel bir bakış sağlar.
+
+
+
+
+
+
+
 
 ## QuestDB and C#
 C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir.
@@ -175,7 +238,9 @@ Grafana konusuna bakıcam(Docker ile çalışıyor)
 - https://questdb.com/docs/third-party-tools/grafana/   -> Grafana kullanımı
 - https://demo.questdb.io/index.html   -> Görselleştirme yapılabilir bu yapı kullanılarak
 - https://questdb.com/docs/reference/sql/datatypes/   -> QuestDB veri yapıları listesi
-- 
+- https://questdb.com/docs/reference/sql/overview/#postgresql  -> Query & SQL Overview (SQL sorguları)
+- https://questdb.com/docs/reference/api/ilp/overview/    -> ILP protokolü detayları
+
 
 
 
