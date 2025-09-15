@@ -156,7 +156,7 @@ curl -G --data-urlencode "query=SELECT 1;" \
 ## PostgreSQL kablolu protokol istemcileri
 ### PostgreSQL ve PGWire
 
-QuestDB, veri girişi için Postgres Wire Protokolünü (PGWire) destekler. PGWire (Postgres Wire Protokolü) PostgreSQL'in istemci-sunucu iletişim protokolüdür. Sorgulama ve veri çıkışı için QuestDB, PostgreSQL protokolüyle uyumludur. Bu, QuestDB ile favori PostgreSQL istemcinizi veya sürücünüzü kullanabileceğiniz anlamına gelir. PGWire arayüzü, öncelikle QuestDB'den veri sorgulamak için önerilir. Veri alımı, özellikle yüksek verimli senaryolar için QuestDB, InfluxDB Hat Protokolü'nü (ILP) destekleyen istemcilerinin kullanılmasını önerir . Bu istemciler, hızlı veri girişi için optimize edilmiştir.
+QuestDB, veri girişi için Postgres Wire Protokolünü (PGWire) destekler. **C# ile kullanacağımız zamanlarda da PGWire ile bağlanacağız**. PGWire (Postgres Wire Protokolü) PostgreSQL'in istemci-sunucu iletişim protokolüdür. Sorgulama ve veri çıkışı için QuestDB, PostgreSQL protokolüyle uyumludur. Bu, QuestDB ile favori PostgreSQL istemcinizi veya sürücünüzü kullanabileceğiniz anlamına gelir. PGWire arayüzü, öncelikle QuestDB'den veri sorgulamak için önerilir. Veri alımı, özellikle yüksek verimli senaryolar için QuestDB, InfluxDB Hat Protokolü'nü (ILP) destekleyen istemcilerinin kullanılmasını önerir . Bu istemciler, hızlı veri girişi için optimize edilmiştir. 
 
 **Not:** PostgreSQL depolama modeli QuestDB'den temel olarak farklıdır. Sonuç olarak PostgreSQL için var olan bazı özellikler QuestDB'de bulunmamaktadır.
 
@@ -221,7 +221,115 @@ Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirs
 
 
 ## QuestDB and C#
-C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir.
+QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım:
+
+```bash
+#NuGet üzerinden kütüphane ekle
+
+dotnet add package Npgsql
+```
+
+```bash
+#Bağlantı aç ve sorgu gönder
+
+using System;
+using Npgsql;
+
+class Program
+{
+    static void Main()
+    {
+        // QuestDB, default olarak port 8812’de PostgreSQL protokolünü dinler
+        var connString = "Host=localhost;Port=8812;Username=admin;Password=quest;Database=qdb";
+
+        using var conn = new NpgsqlConnection(connString);
+        conn.Open();
+
+        // Tablo oluştur
+        using (var cmd = new NpgsqlCommand("CREATE TABLE IF NOT EXISTS sensors(ts TIMESTAMP, value DOUBLE)", conn))
+        {
+            cmd.ExecuteNonQuery();
+        }
+
+        // Veri ekle
+        using (var cmd = new NpgsqlCommand("INSERT INTO sensors VALUES (now(), 42.5)", conn))
+        {
+            cmd.ExecuteNonQuery();
+        }
+
+        // Veri oku
+        using (var cmd = new NpgsqlCommand("SELECT * FROM sensors", conn))
+        using (var reader = cmd.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader.GetDateTime(0)} => {reader.GetDouble(1)}");
+            }
+        }
+    }
+}
+
+# Bu yöntemle, QuestDB’ye PostgreSQL gibi bağlanabiliyoruz
+```
+
+
+QuestDB’nin daha önce de bahsettiğimiz REST API’sini (port 9000) hatırlayalım.
+C#’ta HttpClient kullanarak sorgu gönderebilirsin.
+
+
+bash ```
+#Rest API kullanma
+
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        using var client = new HttpClient();
+        
+        string query = "SELECT * FROM sensors LIMIT 5";
+        string url = $"http://localhost:9000/exec?query={Uri.EscapeDataString(query)}";
+
+        var response = await client.GetStringAsync(url);
+        Console.WriteLine(response);
+    }
+}
+
+#Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştürebilirsin.
+
+```
+
+
+
+QuestDB'nin, InfluxDB line protocol ile veri kabul ettiğini öğrenmiştik. Bu durumda C#’ta UDP/TCP soketi açıp metin formatında veri gönderebilirsin.
+
+
+bash ```
+# Line Protocol (UDP/TCP ile Veri Yazma) (Örnekteki UDP)
+
+using System.Net.Sockets;
+using System.Text;
+
+class Program
+{
+    static void Main()
+    {
+        using var udpClient = new UdpClient();
+        string line = "sensors,location=room1 value=25.3 " + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "000000";
+        byte[] data = Encoding.UTF8.GetBytes(line);
+
+        udpClient.Send(data, data.Length, "localhost", 9009);
+        Console.WriteLine("Data sent to QuestDB via Line Protocol");
+    }
+}
+
+#Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
+```
+
+
 En sağlam yöntem → ADO.NET + Dapper.
 
 Grafana konusuna bakıcam(Docker ile çalışıyor)
