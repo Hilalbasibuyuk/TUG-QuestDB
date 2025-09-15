@@ -347,8 +347,8 @@ Grafana konusuna bakıcam(Docker ile çalışıyor)
 - https://demo.questdb.io/index.html   -> Görselleştirme yapılabilir bu yapı kullanılarak
 - https://questdb.com/docs/reference/sql/datatypes/   -> QuestDB veri yapıları listesi
 - https://questdb.com/docs/reference/sql/overview/#postgresql  -> Query & SQL Overview (SQL sorguları)
-- https://questdb.com/docs/reference/api/ilp/overview/    -> ILP protokolü detayları
-- https://questdb.com/docs/clients/ingest-dotnet/     -> C# ile QuestDB
+- https://questdb.com/docs/reference/api/ilp/overview/    -> ILP protokolü detayları. kullanıcam.
+- https://questdb.com/docs/clients/ingest-dotnet/     -> C# ile QuestDB (Yarın buna bakıcam, c# ile yapmamız gereken şeyleri hocaya sorucam, ACID,CRUD mimairisyle ilerilcem, dotnet )
 
 
 
