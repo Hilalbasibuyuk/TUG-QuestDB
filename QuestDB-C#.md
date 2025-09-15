@@ -119,9 +119,18 @@ curl -G \
 ```
 
   
-
 ### /exp to Export Data.
 Bu uç nokta, URL kodlu sorguları geçirmenize olanak tanır ancak istek gövdesi, JSON'un aksine kaydedilip yeniden kullanılmak üzere tablo biçiminde döndürülür.
+
+```bash
+# Sorguyu göz önünde bulundurarak:
+
+curl -G \
+  --data-urlencode "query=SELECT AccidentIndex2, Date, Time FROM 'Accidents0514.csv'" \
+  --data-urlencode "limit=5" \
+  http://localhost:9000/exp
+```
+
 
 
 ### REST API supports two authentication types:
