@@ -224,13 +224,13 @@ Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirs
 QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım:
 
 ```bash
-//NuGet üzerinden kütüphane ekle
+# NuGet üzerinden kütüphane ekle
 
 dotnet add package Npgsql
 ```
 
 ```bash
-//Bağlantı aç ve sorgu gönder
+# Bağlantı aç ve sorgu gönder
 
 using System;
 using Npgsql;
@@ -278,7 +278,7 @@ C#’ta HttpClient kullanarak sorgu gönderebilirsin.
 
 
 bash ```
-//Rest API kullanma
+# Rest API kullanma
 
 using System;
 using System.Net.Http;
@@ -298,7 +298,7 @@ class Program
     }
 }
 
-//Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştürebilirsin.
+# Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştürebilirsin.
 
 ```
 
@@ -308,7 +308,7 @@ QuestDB'nin, InfluxDB line protocol ile veri kabul ettiğini öğrenmiştik. Bu 
 
 
 bash ```
-// Line Protocol (UDP/TCP ile Veri Yazma) (Örnekteki UDP)
+# Line Protocol (UDP/TCP ile Veri Yazma) (Örnekteki UDP)
 
 using System.Net.Sockets;
 using System.Text;
@@ -326,7 +326,7 @@ class Program
     }
 }
 
-// Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
+# Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
 ```
 
 
