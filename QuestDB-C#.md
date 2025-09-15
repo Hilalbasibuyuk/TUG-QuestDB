@@ -21,6 +21,13 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 - 
 - 
 
+
+**QuestDB'de yüksek kardinalite ile başa çıkma**
+Aslında, yüksek kardinalitede asıl zorluk veritabanlarının verileri depolama ve işleme biçiminden kaynaklanmaktadır. Örneğin, InfluxDB ve diğer bazı zaman serisi veritabanlarında, her zaman serisi kendi dosya grubunda ayrı ayrı saklanır. Aynı tabloda binlerce veya milyonlarca zaman serisi depolandığında, yazma ve tam tarama sorgu performansı önemli ölçüde düşer. Bunun nedeni, bu yüksek kardinaliteli senaryolarda disk yazma ve okuma işlemlerinin çok daha az sıralı örüntüye sahip olmasıdır. Sonuç olarak, bellek gereksinimleri benzersiz zaman serisi sayısıyla birlikte katlanarak artar.
+
+QuestDB, her sütunun kendi yerel biçiminde ayrı ayrı depolandığı yoğun, sütun tabanlı bir depolama modeli kullanır . Tüm satırlar zamana göre sıralanır ve sıralı örüntüleri korumak için zaman tabanlı bölümlere ayrılır. Bu, QuestDB'nin yüksek kardinalite de dahil olmak üzere tüm senaryolarda iyi bir performans seviyesini korumasını sağlar.
+
+
 ### En büyük hitleri şunlardır:
 - **SAMPLE BY** Verileri bir yıldan bir mikrosaniyeye kadar belirli bir zaman aralığına göre parçalara özetler
 - **WHERE IN** Zaman aralıklarını özlü aralıklara sıkıştırmak
@@ -69,7 +76,8 @@ Web Console will be available at http://[server-address]:9000. When running loca
 
 
 
-
+**GRAFANA**
+Grafana, verileri görselleştirmek ve zaman serisi veri analizini etkinleştirmek için kullanılan popüler bir gözlemlenebilirlik ve izleme uygulamasıdır. 
 
 
 
@@ -80,3 +88,15 @@ C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postg
 En sağlam yöntem → ADO.NET + Dapper.
 
 Grafana konusuna bakıcam(Docker ile çalışıyor)
+
+
+
+# KAYNAKÇA
+- https://demo.questdb.io/index.html    -> Demo
+- https://questdb.com/download/         -> Download QuestDB
+- https://github.com/questdb             -> QuestDB GitHub address
+- https://questdb.com/dashboards/crypto/    -> Canlı crypto verileri
+- https://questdb.com/dashboards/fx-orderbook/    -> Canlı fx-orderbook verileri
+- https://grafana.com/grafana/plugins/questdb-questdb-datasource/    -> Grafana kullanımı
+- https://questdb.com/docs/third-party-tools/grafana/   -> Grafana kullanımı
+
