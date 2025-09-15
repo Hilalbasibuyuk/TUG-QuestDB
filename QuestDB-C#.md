@@ -348,6 +348,7 @@ Grafana konusuna bakıcam(Docker ile çalışıyor)
 - https://questdb.com/docs/reference/sql/datatypes/   -> QuestDB veri yapıları listesi
 - https://questdb.com/docs/reference/sql/overview/#postgresql  -> Query & SQL Overview (SQL sorguları)
 - https://questdb.com/docs/reference/api/ilp/overview/    -> ILP protokolü detayları
+- https://questdb.com/docs/clients/ingest-dotnet/     -> C# ile QuestDB
 
 
 
