@@ -10,8 +10,6 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 - **Yüksek Verim (Throughput) ve Düşük Gecikme (Latency):** Tek bir sunucuda saniyede milyonlarca satırlık veri ekleme kapasitesine sahiptir. Veriler milisaniyeler içinde sorgulanabilir hale gelir. 
 
 
-
-
 ### Ana özellikleri şunlardır:
 - Çok hızlı yazma ve okuma (milyonlarca kayıt/saniye işleyebilir).
 - Kolay entegrasyon (Postgres wire protocol, REST API, InfluxDB line protocol desteği).
@@ -31,9 +29,7 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 - Performansı optimize etmek için karmaşık sorgu sonuçlarını önceden hesaplamak ve otomatik olarak yenilemek için Maddeleştirilmiş Görünümler
 
 
-
 <img width="914" height="644" alt="image" src="https://github.com/user-attachments/assets/8e75123d-8d95-4a98-ae7d-13514ea74c97" />
-
 
 
 
@@ -53,9 +49,34 @@ QuestDB, her örnek için tek bir veritabanına sahiptir . PostgreSQL ve diğer 
 Varsayılan veritabanının adı'dır qdbve bu, yapılandırma aracılığıyla değiştirilebilir. Ancak, standart bir SQL veritabanının aksine, USE DATABASEkomut vermenize gerek yoktur. Bağlandıktan sonra, hemen sorgulamaya ve veri eklemeye başlayabilirsiniz.
 
 
+### Şema oluşturma:
+**Önerilen yaklaşım**
+Bir şema oluşturmanın en kolay yolu Web Konsolunu kullanmak veya şu SQL komutlarını göndermektir:
+REST API ( CREATE TABLE ifadeler)
+PostgreSQL kablolu protokol istemcileri
+
+
+**Accessing the Web Console**
+Web Console will be available at http://[server-address]:9000. When running locally, this will be http://localhost:9000.
+<img width="1061" height="602" alt="image" src="https://github.com/user-attachments/assets/861a55ca-68d7-41e0-bfb8-555d08922756" />
+### Web console ekranı bölümleri ve işlevleri
+- **Code Editor:** Kod Düzenleyicisi, sözdizimi vurgulama, otomatik tamamlama ve hata izleme gibi özelliklerle SQL sorguları yazıp çalıştırabileceğiniz yerdir. Seçime göre sorgu yürütme, çoklu sorgu yürütme ve sorgu planlamayı destekler.
+- **Metrics View:** Metrik Görünümü, QuestDB örneğiniz için gerçek zamanlı izleme ve telemetri yetenekleri sağlar. Veritabanı performansını, WAL işlemlerini ve tabloya özgü metrikleri izlemek için etkileşimli grafikler ve araçlar görüntüler.
+- **Schema Explorer:** Şema Gezgini , tabloları ve somutlaştırılmış görünümleri keşfetmek için bir gezinme merkezidir. Veri türlerini içeren sütunlar, depolama yapılandırması (bölümlendirme ve WAL durumu) ve somutlaştırılmış görünümler için temel tablolar dahil olmak üzere her veritabanı nesnesi hakkında ayrıntılı bilgi sağlar.
+- **Result Grid:** Sonuç Tablosu, sorgu sonuçlarınızı veri gezinme, dışa aktarma ve görselleştirme özellikleriyle etkileşimli bir tablo biçiminde görüntüler.
+- **Query Log:** Sorgu Günlüğü, sorgu yürütme durumunu ve performans ölçümlerini izleyerek gerçek zamanlı geri bildirim sağlar ve son işlemlerin geçmişini tutar. Sorgularınızı optimize etmenize yardımcı olmak için yürütme sürelerini, satır sayılarını ve ayrıntılı hata bilgilerini gösterir.
+- **Import CSV** CSV İçe Aktarma arayüzü , otomatik şema algılama, esnek yapılandırma seçenekleri ve ayrıntılı ilerleme takibi ile CSV dosyalarını QuestDB'ye yüklemenize ve içe aktarmanıza olanak tanır. İçe aktarma süreci üzerinde tam kontrole sahip olarak yeni tablolar oluşturabilir veya mevcut tablolara ekleme yapabilirsiniz.
+
+
+
+
+
+
 
 
 
 ## QuestDB and C#
 C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir.
 En sağlam yöntem → ADO.NET + Dapper.
+
+Grafana konusuna bakıcam(Docker ile çalışıyor)
