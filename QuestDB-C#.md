@@ -221,7 +221,15 @@ Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirs
 
 
 ## QuestDB and C#
-QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım:
+QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım CRUD mimarisi:
+
+CRUD -> create/read/update/delete
+**CREATE ve READ var**
+**UPDATE**: QuestDB UPDATE desteklemez. Tek yol: yanlış kaydı silip (veya tabloyu truncate edip), doğru veriyi yeniden insert etmek. Yani klasik anlamda update yok
+**DELETE**: QuestDB’de DELETE sadece timestamp (designated timestamp) alanı ile çalışır. DELETE WHERE value = 123.45 gibi non-time sütunlarında çalışmaz. Kısaca, var ama sadece ts üzerinden veya TRUNCATE ile diyebiliriz.
+
+
+1- Docker Desktop bilgisayarınızda varsa açın. Bu sayede bilgisayarınızda Docker'ı çalıştırmış olacaksınız. Ardından proje dizininize gidin ve paket eklemelerini yapın.
 
 ```bash
 # NuGet üzerinden kütüphane ekle
@@ -229,47 +237,18 @@ QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak ba
 dotnet add package Npgsql
 ```
 
+### Program.cs dosyasına bu kodu kopyalayın, QuestDB ile bağlantı için.
 ```bash
-# Bağlantı aç ve sorgu gönder
+# Bağlantı aç 
 
-using System;
 using Npgsql;
 
-class Program
-{
-    static void Main()
-    {
-        // QuestDB, default olarak port 8812’de PostgreSQL protokolünü dinler
-        var connString = "Host=localhost;Port=8812;Username=admin;Password=quest;Database=qdb";
+string connString = "Host=localhost;Port=8812;Username=admin;Password=quest;Database=qdb";
 
-        using var conn = new NpgsqlConnection(connString);
-        conn.Open();
+using var conn = new NpgsqlConnection(connString);
+conn.Open();
+Console.WriteLine("QuestDB bağlantısı başarılı!");
 
-        // Tablo oluştur
-        using (var cmd = new NpgsqlCommand("CREATE TABLE IF NOT EXISTS sensors(ts TIMESTAMP, value DOUBLE)", conn))
-        {
-            cmd.ExecuteNonQuery();
-        }
-
-        // Veri ekle
-        using (var cmd = new NpgsqlCommand("INSERT INTO sensors VALUES (now(), 42.5)", conn))
-        {
-            cmd.ExecuteNonQuery();
-        }
-
-        // Veri oku
-        using (var cmd = new NpgsqlCommand("SELECT * FROM sensors", conn))
-        using (var reader = cmd.ExecuteReader())
-        {
-            while (reader.Read())
-            {
-                Console.WriteLine($"{reader.GetDateTime(0)} => {reader.GetDouble(1)}");
-            }
-        }
-    }
-}
-
-// Bu yöntemle, QuestDB’ye PostgreSQL gibi bağlanabiliyoruz
 ```
 
 
@@ -333,6 +312,9 @@ class Program
 En sağlam yöntem → ADO.NET + Dapper.
 
 Grafana konusuna bakıcam(Docker ile çalışıyor)
+
+
+
 
 
 
