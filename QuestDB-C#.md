@@ -238,6 +238,10 @@ QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak ba
 
 1- Docker Desktop bilgisayarınızda varsa açın. Bu sayede bilgisayarınızda Docker'ı çalıştırmış olacaksınız. Ardından proje dizininize gidin ve paket eklemelerini yapın.
 
+### Komut isteminde bu komutu çalıştırın
+docker run -p 9000:9000 -p 8812:8812 -p 9009:9009 questdb/questdb:latest
+
+
 ```bash
 # NuGet üzerinden kütüphane ekle
 
