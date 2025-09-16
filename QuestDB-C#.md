@@ -313,13 +313,9 @@ class Program
 ```
 
 
-QuestDB’nin daha önce de bahsettiğimiz REST API’sini (port 9000) hatırlayalım.
-C#’ta HttpClient kullanarak sorgu gönderebilirsin.
+QuestDB’nin daha önce bahsettiğimiz REST API (port 9000) üzerinden sorgu gönderebiliriz. C#’ta bunu `HttpClient` kullanarak yapabiliriz. Örnek:
 
-
-bash ```
-# Rest API kullanma
-
+```csharp
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -337,17 +333,16 @@ class Program
         Console.WriteLine(response);
     }
 }
-
-# Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştürebilirsin.
-
 ```
+
+### Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştürebilirsin.
 
 
 
 QuestDB'nin, InfluxDB line protocol ile veri kabul ettiğini öğrenmiştik. Bu durumda C#’ta UDP/TCP soketi açıp metin formatında veri gönderebilirsin.
 
 
-bash ```
+ ```csharp
 # Line Protocol (UDP/TCP ile Veri Yazma) (Örnekteki UDP)
 
 using System.Net.Sockets;
