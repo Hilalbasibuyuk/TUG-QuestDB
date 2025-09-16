@@ -218,8 +218,6 @@ Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirs
 
 
 
-
-
 ## QuestDB and C#
 QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım CRUD mimarisi:
 
@@ -249,6 +247,68 @@ string connString = "Host=localhost;Port=8812;Username=admin;Password=quest;Data
 using var conn = new NpgsqlConnection(connString);
 conn.Open();
 Console.WriteLine("QuestDB bağlantısı başarılı!");
+
+```
+
+### CRUD mimarisini karşılayan C# kod örneği:
+
+
+```bash
+
+using System;
+using Npgsql;
+using NpgsqlTypes;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var connString = "Host=127.0.0.1;Port=8812;Username=admin;Password=quest;Database=qdb";
+
+        using var conn = new NpgsqlConnection(connString);
+        conn.Open();
+
+        Console.WriteLine("QuestDB bağlantısı başarılı!");
+
+        // Epoch millis
+        long tsMillis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // INSERT = CREATE
+        using (var cmd = new NpgsqlCommand("INSERT INTO my_table (ts, value) VALUES (@ts, @val)", conn))
+        {
+            cmd.Parameters.Add("@ts", NpgsqlDbType.Bigint).Value = tsMillis;
+            cmd.Parameters.Add("@val", NpgsqlDbType.Double).Value = 123.45;
+
+            int rows = cmd.ExecuteNonQuery();
+            Console.WriteLine($"{rows} satır eklendi.");
+        }
+
+
+        // DELETE = Truncate ile (Tamamını siler)
+        using (var cmd = new NpgsqlCommand("TRUNCATE TABLE my_table", conn)) // Dosyanın tamamını temizleme
+        {
+            cmd.ExecuteNonQuery();
+            Console.WriteLine("Tablo temizlendi.");
+        }
+
+        // SELECT örneği (timestamp'i long olarak alıyoruz) = READ
+        using (var cmd = new NpgsqlCommand("SELECT cast(ts as long), value FROM my_table LIMIT 5", conn))
+        using (var reader = cmd.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                long epochMillis = reader.GetInt64(0);
+                DateTime tsValue = DateTimeOffset.FromUnixTimeMilliseconds(epochMillis).UtcDateTime;
+
+                double val = reader.GetDouble(1);
+
+                Console.WriteLine($"ts={tsValue:O}, value={val}");
+            }
+        }
+
+        
+    }
+}
 
 ```
 
