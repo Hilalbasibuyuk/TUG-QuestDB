@@ -380,4 +380,5 @@ En sağlam yöntem → ADO.NET + Dapper.
 - https://questdb.com/docs/reference/sql/datatypes/   -> QuestDB veri yapıları listesi
 - https://questdb.com/docs/reference/sql/overview/#postgresql  -> Query & SQL Overview (SQL sorguları)
 - https://questdb.com/docs/reference/api/ilp/overview/    -> ILP protokolü detayları. kullanıcam.
-- https://questdb.com/docs/clients/ingest-dotnet/     -> C# ile QuestDB 
+- https://questdb.com/docs/clients/ingest-dotnet/     -> C# ile QuestDB
+- https://medium.com/@sumerburak/questdb-ile-zaman-yolculu%C4%9Funa-%C3%A7%C4%B1k%C4%B1yoruz-net-ile-e%C4%9Flenceli-bir-macera-c7bea81d4af1   -> QuestDB ile C# bağlama kısmı için detaylı bilgi
