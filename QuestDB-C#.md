@@ -434,6 +434,36 @@ Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
 
 ### Temel ekleme (kimlik doğrulaması olmadan)
 
+#### WAL NEDİR? (WAL = Write-Ahead Log)
+- Veritabanı teknolojilerinde çok yaygın bir kavramdır.
+
+- Normal tabloda: Veriler doğrudan tabloya yazılır.WAL tabloda: Önce bir log (günlük) dosyasına yazılır, sonra arka planda tabloya işlenir.
+
+**Bu sayede:**
+
+- Yazma çok hızlı olur (çünkü sadece append log yazıyorsun).
+
+- Dayanıklılık artar (çünkü log’dan recovery yapılabilir).
+
+- Concurrent ingestion (çoklu thread/process aynı tabloya aynı anda yazabilir).
+
+
+#### Avantajları
+
+- Çok yüksek ingestion hızı (milyonlarca row/sn).
+
+- Asenkron commit → yazma hızı artar.
+
+- Crash sonrası recovery daha güvenilir.
+
+#### Dezavantajları
+
+- Biraz daha fazla disk kullanır (çünkü log dosyaları tutulur).
+
+- “İlk yazım” sonrasında veri arka planda işleneceği için, bazı edge case’lerde hemen sorgulanabilir olmayabilir (ama QuestDB bunu hızlı senkronize eder).
+
+
+
 #### WALL yapısı ile tablo oluşturuyoruz.
 
 ```bash
