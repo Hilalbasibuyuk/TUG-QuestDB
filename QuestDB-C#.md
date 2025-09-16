@@ -219,6 +219,16 @@ Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirs
 ## QuestDB and C#
 QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım CRUD mimarisi:
 
+### Performans Optimizasyonu İçin En İyi Uygulamalar
+
+- Otomatik Flush Ayarları: Veri gönderimi sırasında otomatik flush ayarlarını yapılandırarak, belirli bir satır sayısına ulaşıldığında veya belirli bir zaman diliminde verilerin gönderilmesini sağlayabilirsiniz. 
+
+- Veri Modelleme: Zaman damgası (timestamp) kullanımı ve semboller (symbols) gibi veri modelleme teknikleriyle sorgu performansını artırabilirsiniz. 
+
+- Sorgu Optimizasyonu: Sorgularınızda LATEST ON gibi QuestDB'ye özgü SQL komutlarını kullanarak, en son verileri hızlı bir şekilde alabilirsiniz
+
+
+
 ### CRUD -> create/read/update/delete
 
 - **CREATE ve READ var**
@@ -361,15 +371,26 @@ class Program
 
 # Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
 ```
+### DOTNET Client
+
+- dotnet add package net-questdb-client
+
+### TCP üzerinden kimlik doğrulama gerekiyorsa, ek olarak şu paketi de kurmanız gerekir:
+
+- dotnet add package net-questdb-client-tcp-auth
 
 ### Temel kimlik doğrulama
-using var sender = Sender.New("http::addr=localhost:9000;username=admin;password=quest;"); 
+
+- using var sender = Sender.New("http::addr=localhost:9000;username=admin;password=quest;"); 
 
 ### Token kimlik doğrulama
-using var sender = Sender.New("http::addr=localhost:9000;username=admin;token=<token>");
+
+- using var sender = Sender.New("http::addr=localhost:9000;username=admin;token=<token>");
 
 ###  TCP kimlik doğrulama
-using var sender = Sender.New("tcp::addr=localhost:9009;username=admin;token=<token>");
+
+- using var sender = Sender.New("tcp::addr=localhost:9009;username=admin;token=<token>");
+
 
 
 ### Temel ekleme (kimlik doğrulaması olmadan)
