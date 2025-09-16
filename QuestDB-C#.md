@@ -73,9 +73,7 @@ Web Console will be available at http://[server-address]:9000. When running loca
 - **Import CSV** CSV İçe Aktarma arayüzü , otomatik şema algılama, esnek yapılandırma seçenekleri ve ayrıntılı ilerleme takibi ile CSV dosyalarını QuestDB'ye yüklemenize ve içe aktarmanıza olanak tanır. İçe aktarma süreci üzerinde tam kontrole sahip olarak yeni tablolar oluşturabilir veya mevcut tablolara ekleme yapabilirsiniz.
 
 
-
-**GRAFANA**
-Grafana, verileri görselleştirmek ve zaman serisi veri analizini etkinleştirmek için kullanılan popüler bir gözlemlenebilirlik ve izleme uygulamasıdır. 
+**GRAFANA**: Verileri görselleştirmek ve zaman serisi veri analizini etkinleştirmek için kullanılan popüler bir gözlemlenebilirlik ve izleme uygulamasıdır. 
 
 
 ## Rest API
@@ -364,6 +362,84 @@ class Program
 # Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
 ```
 
+### Temel kimlik doğrulama
+using var sender = Sender.New("http::addr=localhost:9000;username=admin;password=quest;"); 
+
+### Token kimlik doğrulama
+using var sender = Sender.New("http::addr=localhost:9000;username=admin;token=<token>");
+
+###  TCP kimlik doğrulama
+using var sender = Sender.New("tcp::addr=localhost:9009;username=admin;token=<token>");
+
+
+### Temel ekleme (kimlik doğrulaması olmadan)
+
+```csharp
+using System;
+using QuestDB;
+
+using var sender =  Sender.New("http::addr=localhost:9000;");
+await sender.Table("trades")
+    .Symbol("symbol", "ETH-USD")
+    .Symbol("side", "sell")
+    .Column("price", 2615.54)
+    .Column("amount", 0.00044)
+    .AtNowAsync();
+await sender.Table("trades")
+    .Symbol("symbol", "BTC-USD")
+    .Symbol("side", "sell")
+    .Column("price", 39269.98)
+    .Column("amount", 0.001)
+    .AtNowAsync();
+await sender.SendAsync();
+
+```
+
+### Zaman damgaları, özel otomatik temizleme, temel kimlik doğrulama ve hata bildirimi içeren bir örnek:
+
+```charp
+
+using QuestDB;
+using System;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        using var sender = Sender.New(
+          "http::addr=localhost:9000;username=admin;password=quest;auto_flush_rows=100;auto_flush_interval=1000;"
+        );
+
+        var now = DateTime.UtcNow;
+        try
+        {
+            await sender.Table("trades")
+                        .Symbol("symbol", "ETH-USD")
+                        .Symbol("side", "sell")
+                        .Column("price", 2615.54)
+                        .Column("amount", 0.00044)
+                        .AtAsync(now);
+
+            await sender.Table("trades")
+                        .Symbol("symbol", "BTC-USD")
+                        .Symbol("side", "sell")
+                        .Column("price", 39269.98)
+                        .Column("amount", 0.001)
+                        .AtAsync(now);
+
+            await sender.SendAsync();
+
+            Console.WriteLine("Data flushed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}
+
+```
 
 En sağlam yöntem → ADO.NET + Dapper.
 
