@@ -223,10 +223,11 @@ Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirs
 ## QuestDB and C#
 QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım CRUD mimarisi:
 
-CRUD -> create/read/update/delete
-**CREATE ve READ var**
-**UPDATE**: QuestDB UPDATE desteklemez. Tek yol: yanlış kaydı silip (veya tabloyu truncate edip), doğru veriyi yeniden insert etmek. Yani klasik anlamda update yok
-**DELETE**: QuestDB’de DELETE sadece timestamp (designated timestamp) alanı ile çalışır. DELETE WHERE value = 123.45 gibi non-time sütunlarında çalışmaz. Kısaca, var ama sadece ts üzerinden veya TRUNCATE ile diyebiliriz.
+### CRUD -> create/read/update/delete
+
+- **CREATE ve READ var**
+- **UPDATE**: QuestDB UPDATE desteklemez. Tek yol: yanlış kaydı silip (veya tabloyu truncate edip), doğru veriyi yeniden insert etmek. Yani klasik anlamda update yok
+- **DELETE**: QuestDB’de DELETE sadece timestamp (designated timestamp) alanı ile çalışır. DELETE WHERE value = 123.45 gibi non-time sütunlarında çalışmaz. Kısaca, var ama sadece ts üzerinden veya TRUNCATE ile diyebiliriz.
 
 
 1- Docker Desktop bilgisayarınızda varsa açın. Bu sayede bilgisayarınızda Docker'ı çalıştırmış olacaksınız. Ardından proje dizininize gidin ve paket eklemelerini yapın.
