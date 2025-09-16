@@ -51,7 +51,7 @@ Raspberry Pi 5 gibi hafif bir donanımda bile QuestDB, daha güçlü donanımlar
 ### QuestDB'nin tek veritabanı özelliği
 QuestDB, her örnek için tek bir veritabanına sahiptir . PostgreSQL ve diğer veritabanı motorlarının aksine, bir örnekte birden fazla veritabanı veya birden fazla şema bulunabilirken, QuestDB'de tek bir ad alanında çalışırsınız.
 
-Varsayılan veritabanının adı'dır qdbve bu, yapılandırma aracılığıyla değiştirilebilir. Ancak, standart bir SQL veritabanının aksine, USE DATABASEkomut vermenize gerek yoktur. Bağlandıktan sonra, hemen sorgulamaya ve veri eklemeye başlayabilirsiniz.
+Varsayılan veritabanının adı qdb'dir ve bu, yapılandırma aracılığıyla değiştirilebilir. Ancak, standart bir SQL veritabanının aksine, USE DATABASE komut vermenize gerek yoktur. Bağlandıktan sonra, hemen sorgulamaya ve veri eklemeye başlayabilirsiniz.
 
 
 ## Şema oluşturma:
