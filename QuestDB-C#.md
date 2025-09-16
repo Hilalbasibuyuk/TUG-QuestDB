@@ -517,6 +517,15 @@ class Program
 
 En sağlam yöntem → ADO.NET + Dapper.
 
+# QuestDB .NET Kullanım Yöntemleri
+
+| Yöntem             | Özellikler                                                                 |
+|--------------------|------------------------------------------------------------------------------|
+| **Sender API**     | - Sadece **WAL tabloları** destekler <br> - Çok hızlı, **real-time ingestion** için tasarlanmış |
+| **ADO.NET + Dapper** | - Hem **WAL** hem **non-WAL** tablolarıyla çalışır <br> - Normal **SQL** yazabilirsin (`SELECT`, `INSERT`, `UPDATE`, `JOIN` vs.) <br> - ORM kolaylığı sağlar |
+
+
+
 
 # KAYNAKÇA
 - https://demo.questdb.io/index.html    -> Demo
