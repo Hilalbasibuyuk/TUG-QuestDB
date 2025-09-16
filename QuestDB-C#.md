@@ -85,16 +85,11 @@ Tablo biçimindeki metin verilerini doğrudan bir tabloya aktarır. İsteğe ba�
 
 **Örnek kullanım:**
 ```bash
-curl -F data=@weather.csv \
-'http://localhost:9000/imp?overwrite=true&name=new_table&timestamp=ts&partitionBy=MONTH'
-
-# Standart dışı zaman damgasına sahip CSV'yi içe aktarma
-curl -F data=@weather.csv 'http://localhost:9000/imp'
+curl.exe -F "data=@C:\Users\hilal\OneDrive\Masaüstü\QuestDbDemo\weather.csv" "http://localhost:9000/imp?overwrite=true&name=new_table"
 
 #User defined schema
-curl \
--F schema='[{"name":"dewpF", "type": "STRING"}]' \
--F data=@weather.csv 'http://localhost:9000/imp'
+curl.exe -F "schema=[{\"name\":\"temp\",\"type\":\"DOUBLE\"},{\"name\":\"humidity\",\"type\":\"INT\"},{\"name\":\"city\",\"type\":\"STRING\"}]" -F "data=@C:\Users\hilal\OneDrive\Masaüstü\QuestDbDemo\weather.csv" "http://localhost:9000/imp?overwrite=true&name=new_table"
+
 ```
 
 
@@ -105,28 +100,34 @@ SQL INSERT Query, Giriş noktası bir SQL sorgusu alır ve sonuçları JSON olar
 
 
 ```bash
-# Tablo Oluşturma
-curl -G \
-  --data-urlencode "query=CREATE TABLE IF NOT EXISTS trades(name STRING, value INT)" \
-  http://localhost:9000/exec
+# Tablo Oluşturma (CMD)
+curl.exe -G ^
+  --data-urlencode "query=CREATE TABLE IF NOT EXISTS trades(name STRING, value INT)" ^
+  "http://localhost:9000/exec"
+
 
 # Satır Ekleme
-curl -G \
-  --data-urlencode "query=INSERT INTO trades VALUES('abc', 123456)" \
+curl -G ^
+  --data-urlencode "query=INSERT INTO trades VALUES('abc', 123456)" ^
   http://localhost:9000/exec
 ```
 
   
 ### /exp to Export Data.
-Bu uç nokta, URL kodlu sorguları geçirmenize olanak tanır ancak istek gövdesi, JSON'un aksine kaydedilip yeniden kullanılmak üzere tablo biçiminde döndürülür. Veritabanını bir SQL select sorgusu ile sorgulamaya ve sonuçları CSV olarak almaya olanak tanır. Sonuçları JSON formatında almak için /exec kullanırız.
+Bu uç nokta, URL kodlu sorguları geçirmenize olanak tanır ancak istek gövdesi, JSON'un aksine kaydedilip yeniden kullanılmak üzere tablo biçiminde döndürülür. Veritabanını bir SQL select sorgusu ile sorgulamaya ve sonuçları CSV olarak almaya olanak tanır. Sonuçları JSON formatında almak için /exec kullanırız. 
 
 ```bash
-# Sorguyu göz önünde bulundurarak:
+# Önce weather tablosu oluşturulabilir csv'den:
 
-curl -G \
-  --data-urlencode "query=SELECT AccidentIndex2, Date, Time FROM 'Accidents0514.csv'" \
-  --data-urlencode "limit=5" \
-  http://localhost:9000/exp
+curl.exe -F "data=@C:\Users\hilal\OneDrive\Masaüstü\QuestDbDemo\weather.csv" "http://localhost:9000/imp?overwrite=true&name=weather"
+
+# Ardından dışa aktarma işlemi yapılabilir:
+
+curl.exe -G ^
+  --data-urlencode "query=SELECT temp, humidity, city FROM weather" ^
+  --data-urlencode "limit=5" ^
+  "http://localhost:9000/exp"
+
 ```
 
 
@@ -138,23 +139,31 @@ curl -G \
 
 İlk kimlik doğrulama türü çoğunlukla web tarayıcıları tarafından desteklenir. Ancak, kullanıcı kimlik bilgilerini bir başlıkta programatik olarak da uygulayabilirsiniz.(Authorization: Basic)
 
-```bash
-curl -G --data-urlencode "query=SELECT 1;" \
-    -u "my_user:my_password" \
+
+```csharp
+
+# Veritabanının çalıştığını ve SQL sorgularını alıp cevap verdiğini gösterir. Basic Auth kullanıyoruz. Yani kullanıcı adı ve şifreyi base64 ile encode edip HTTP header’a ekliyoruz.
+
+curl -G --data-urlencode "query=SELECT 1;" ^
+    -u "my_user:my_password" ^
     http://localhost:9000/exec
 ```
 
 İkinci kimlik doğrulama türü, bir REST API belirtecinin bir başlıkta belirtilmesini gerektirir  (Authorization: Bearer header)
-```bash
-curl -G --data-urlencode "query=SELECT 1;" \
-    -H "Authorization: Bearer qt1cNK6s2t79f76GmTBN9k7XTWm5wwOtF7C0UBxiHGPn44" \
+```charp
+
+# Kullanıcı adı ve şifre yerine tek seferlik veya uzun ömürlü token ile yetki veriyor
+
+curl -G --data-urlencode "query=SELECT 1;" ^
+    -H "Authorization: Bearer qt1cNK6s2t79f76GmTBN9k7XTWm5wwOtF7C0UBxiHGPn44" ^
     http://localhost:9000/exec
+
 ```
 
 ## PostgreSQL kablolu protokol istemcileri
 ### PostgreSQL ve PGWire
 
-QuestDB, veri girişi için Postgres Wire Protokolünü (PGWire) destekler. **C# ile kullanacağımız zamanlarda da PGWire ile bağlanacağız**. PGWire (Postgres Wire Protokolü) PostgreSQL'in istemci-sunucu iletişim protokolüdür. Sorgulama ve veri çıkışı için QuestDB, PostgreSQL protokolüyle uyumludur. Bu, QuestDB ile favori PostgreSQL istemcinizi veya sürücünüzü kullanabileceğiniz anlamına gelir. PGWire arayüzü, öncelikle QuestDB'den veri sorgulamak için önerilir. Veri alımı, özellikle yüksek verimli senaryolar için QuestDB, InfluxDB Hat Protokolü'nü (ILP) destekleyen istemcilerinin kullanılmasını önerir . Bu istemciler, hızlı veri girişi için optimize edilmiştir. 
+QuestDB, veri girişi için Postgres Wire Protokolünü (PGWire) destekler. **C# ile kullanacağımız zamanlarda da PGWire ile bağlanacağız**. PGWire (Postgres Wire Protokolü) PostgreSQL'in istemci-sunucu iletişim protokolüdür. Sorgulama ve veri çıkışı için QuestDB, PostgreSQL protokolüyle uyumludur. Bu, QuestDB ile favori PostgreSQL istemcinizi veya sürücünüzü kullanabileceğiniz anlamına gelir. PGWire arayüzü, öncelikle QuestDB'den veri sorgulamak için önerilir.
 
 **Not:** PostgreSQL depolama modeli QuestDB'den temel olarak farklıdır. Sonuç olarak PostgreSQL için var olan bazı özellikler QuestDB'de bulunmamaktadır.
 
@@ -171,6 +180,33 @@ QuestDB, tüm zaman damgalarını dahili olarak UTC(Coordinated Universal Time) 
 
 Mevcut davranış şu an iyileştirilmeye çalışılıyor. Bu arada, zaman damgalarının tutarlı bir şekilde işlenmesini sağlamak için istemci kitaplığınızdaki saat dilimini UTC olarak ayarlamanızı öneririz.
 
+**QuestDB CSV Import – Timestamp ve Partition Kullanımı**
+
+#### 1. CSV Dosyası
+
+CSV’de timestamp kolonunu **ISO8601 UTC formatında** veya **epoch milisaniye** ile sağlamalısınız:
+
+```csv
+ts,temp,humidity,city
+2025-09-16T10:00:00Z,24.5,40,Antalya
+2025-09-16T11:00:00Z,26.1,38,Antalya
+2025-09-16T12:00:00Z,27.3,35,Antalya
+```
+- Not: Z UTC (Coordinated Universal Time) anlamına gelir.
+
+#### 2. CSV’yi QuestDB’ye Import Etme
+
+- /imp endpoint’i ile import ederken timestamp ve partitionBy parametrelerini kullanın:
+curl.exe -F "data=@C:\QuestDbDemo\weather.csv" "http://localhost:9000/imp?overwrite=true&name=weather&timestamp=ts&partitionBy=MONTH"
+
+#### BÖYLECE:
+- QuestDB timestamp’leri her zaman UTC olarak depolar
+
+- İstemci tarafında timestamp’leri UTC olarak yorumlayın
+
+- Böylece saat farkı veya yanlış veri gösterimi olmaz
+
+
 #### Yalnızca İleri İmleçler
 QuestDB'nin imleçleri yalnızca ileriye yöneliktir ve bu, PostgreSQL'in kaydırılabilir imleç desteğinden (çift yönlü gezinme ve rastgele satır erişimi sağlar) farklıdır. QuestDB ile sorgu sonuçlarında baştan sona sırayla gezinebilirsiniz, ancak geriye gidemez veya belirli satırlara atlayamazsınız. Kaydırılabilir türler için açık DECLARE CURSOR ifadeleri veya ters yönde getirme gibi işlemler (örneğin, Çalışma Alanı BACKWARD) desteklenmez.
 Bu sınırlama, kaydırılabilir imleç özelliklerine dayanan istemci kitaplıklarını etkileyebilir. Örneğin, Python'ın psycopg2 sürücüsü bu tür işlemleri denediğinde sorunlarla karşılaşabilir. En iyi uyumluluk için sürücüleri seçin veya mevcut sürücüleri, Python'ın asyncpg sürücüsü gibi yalnızca ileri imleçleri kullanacak şekilde yapılandırın.
@@ -184,6 +220,7 @@ Bu sınırlama, kaydırılabilir imleç özelliklerine dayanan istemci kitaplık
 - Mevcut PostgreSQL tool'ları ile QuestDB'ye erişim
 
 - High-throughput data ingestion ve analiz
+
 
 
 ### List of supported features:
@@ -203,6 +240,13 @@ Bu sınırlama, kaydırılabilir imleç özelliklerine dayanan istemci kitaplık
 - BLOB transfer
 
 
+### CRUD -> create/read/update/delete  -> Yukarıdaki kendi sitesinden alıntı özellik destekleri var.
+
+- **CREATE ve READ var**
+- **UPDATE**: QuestDB UPDATE desteklemez. Tek yol: yanlış kaydı silip (veya tabloyu truncate edip), doğru veriyi yeniden insert etmek. Yani klasik anlamda update yok
+- **DELETE**: QuestDB’de DELETE sadece timestamp (designated timestamp) alanı ile çalışır. DELETE WHERE value = 123.45 gibi non-time sütunlarında çalışmaz. Kısaca, var ama sadece ts üzerinden veya TRUNCATE ile diyebiliriz.
+
+
 
 ## ILP Protokolü ile Şema otomatik oluşturma
 Influx Line Protocol (ILP) kullanıldığında , QuestDB gelen verilere göre otomatik olarak tablolar ve sütunlar oluşturur.Bu özellik, InfluxDB'den geçiş yapan veya InfluxDB istemci kütüphaneleri ya da Telegraf gibi araçlar kullanan kullanıcılar için kullanışlıdır , çünkü önceden tanımlanmış şemalar olmadan verileri doğrudan QuestDB'ye gönderebilirler. Ancak bunun bazı sınırlamaları vardır:
@@ -217,7 +261,6 @@ Sütun otomatik oluşturmayı yapılandırma yoluyla devre dışı bırakabilirs
 
 
 ## QuestDB and C#
-QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. Adım adım kullanmaya başlayalım CRUD mimarisi:
 
 ### Performans Optimizasyonu İçin En İyi Uygulamalar
 
@@ -228,30 +271,26 @@ QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak ba
 - Sorgu Optimizasyonu: Sorgularınızda LATEST ON gibi QuestDB'ye özgü SQL komutlarını kullanarak, en son verileri hızlı bir şekilde alabilirsiniz
 
 
-
-### CRUD -> create/read/update/delete
-
-- **CREATE ve READ var**
-- **UPDATE**: QuestDB UPDATE desteklemez. Tek yol: yanlış kaydı silip (veya tabloyu truncate edip), doğru veriyi yeniden insert etmek. Yani klasik anlamda update yok
-- **DELETE**: QuestDB’de DELETE sadece timestamp (designated timestamp) alanı ile çalışır. DELETE WHERE value = 123.45 gibi non-time sütunlarında çalışmaz. Kısaca, var ama sadece ts üzerinden veya TRUNCATE ile diyebiliriz.
+QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak bağlantı yolları var. C# tarafında en yaygın PostgreSQL kütüphanesi Npgsql’dir. QuestDB de Postgres protokolünü konuştuğu için doğrudan kullanılabilir. **Adım adım kullanmaya başlayalım**:
 
 
-1- Docker Desktop bilgisayarınızda varsa açın. Bu sayede bilgisayarınızda Docker'ı çalıştırmış olacaksınız. Ardından proje dizininize gidin ve paket eklemelerini yapın.
 
-### Komut isteminde bu komutu çalıştırın
-docker run -p 9000:9000 -p 8812:8812 -p 9009:9009 questdb/questdb:latest
-
+#### 1- Docker Desktop bilgisayarınızda varsa açın. Bu sayede bilgisayarınızda Docker'ı çalıştırmış olacaksınız.
+#### 2- Komut isteminde bu komutu çalıştırarak Docker'ı başlatın
 
 ```bash
-# NuGet üzerinden kütüphane ekle
+docker run -p 9000:9000 -p 8812:8812 -p 9009:9009 questdb/questdb:latest
+```
 
+#### 3- Ardından proje dizininize gidin ve paket eklemelerini yapın.
+
+```bash
 dotnet add package Npgsql
 ```
 
-### Program.cs dosyasına bu kodu kopyalayın, QuestDB ile bağlantı için.
-```bash
-# Bağlantı aç 
+### Program.cs dosyasına bu kodu kopyalayın, QuestDB ile bağlantı sağlarız bu kod ile.
 
+```bash
 using Npgsql;
 
 string connString = "Host=localhost;Port=8812;Username=admin;Password=quest;Database=qdb";
@@ -259,11 +298,9 @@ string connString = "Host=localhost;Port=8812;Username=admin;Password=quest;Data
 using var conn = new NpgsqlConnection(connString);
 conn.Open();
 Console.WriteLine("QuestDB bağlantısı başarılı!");
-
 ```
 
 ### CRUD mimarisini karşılayan C# kod örneği:
-
 
 ```bash
 
@@ -317,15 +354,13 @@ class Program
                 Console.WriteLine($"ts={tsValue:O}, value={val}");
             }
         }
-
-        
     }
 }
 
 ```
 
 
-QuestDB’nin daha önce bahsettiğimiz REST API (port 9000) üzerinden sorgu gönderebiliriz. C#’ta bunu `HttpClient` kullanarak yapabiliriz. Örnek:
+### QuestDB’nin daha önce bahsettiğimiz REST API (port 9000) üzerinden sorgu gönderebiliriz. C#’ta bunu `HttpClient` kullanarak yapabiliriz. Örnek:
 
 ```csharp
 using System;
@@ -337,26 +372,24 @@ class Program
     static async Task Main()
     {
         using var client = new HttpClient();
-        
-        string query = "SELECT * FROM sensors LIMIT 5";
-        string url = $"http://localhost:9000/exec?query={Uri.EscapeDataString(query)}";
+
+        string query = "SELECT * FROM weather LIMIT 5";
+        string url = "http://localhost:9000/exec?query=" + Uri.EscapeDataString(query);
 
         var response = await client.GetStringAsync(url);
         Console.WriteLine(response);
     }
 }
+
 ```
-
-### Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştürebilirsin.
-
+Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştürebilirsin.
 
 
-QuestDB'nin, InfluxDB line protocol ile veri kabul ettiğini öğrenmiştik. Bu durumda C#’ta UDP/TCP soketi açıp metin formatında veri gönderebilirsin.
+
+### QuestDB'nin, InfluxDB line protocol ile veri kabul ettiğini öğrenmiştik. Bu durumda C#’ta UDP/TCP soketi açıp metin formatında veri gönderebilirsin.(Line Protocol (UDP/TCP ile Veri Yazma) (Örnekteki UDP))
 
 
  ```csharp
-# Line Protocol (UDP/TCP ile Veri Yazma) (Örnekteki UDP)
-
 using System.Net.Sockets;
 using System.Text;
 
@@ -372,9 +405,11 @@ class Program
         Console.WriteLine("Data sent to QuestDB via Line Protocol");
     }
 }
-
-# Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
 ```
+
+Burada veriler çok hızlı şekilde QuestDB’ye yazılabilir.
+
+
 ### DOTNET Client
 
 - dotnet add package net-questdb-client
@@ -399,6 +434,21 @@ class Program
 
 ### Temel ekleme (kimlik doğrulaması olmadan)
 
+#### WALL yapısı ile tablo oluşturuyoruz.
+
+```bash
+DROP TABLE trades;
+
+CREATE TABLE trades (
+    symbol SYMBOL,
+    side SYMBOL,
+    price DOUBLE,
+    amount DOUBLE,
+    ts TIMESTAMP
+) TIMESTAMP(ts) PARTITION BY DAY WAL;
+```
+#### Ardından C# tarafında bu kodu çalıştırarak verileri ekleyebiliyoruz.
+
 ```csharp
 using System;
 using QuestDB;
@@ -420,7 +470,7 @@ await sender.SendAsync();
 
 ```
 
-### Zaman damgaları, özel otomatik temizleme, temel kimlik doğrulama ve hata bildirimi içeren bir örnek:
+#### Zaman damgaları, özel otomatik temizleme, temel kimlik doğrulama ve hata bildirimi içeren bir örnek:
 
 ```charp
 
@@ -463,7 +513,6 @@ class Program
         }
     }
 }
-
 ```
 
 En sağlam yöntem → ADO.NET + Dapper.
