@@ -547,12 +547,29 @@ class Program
 
 En sağlam yöntem → ADO.NET + Dapper.
 
-# QuestDB .NET Kullanım Yöntemleri
+## QuestDB .NET Kullanım Yöntemleri
 
 | Yöntem             | Özellikler                                                                 |
 |--------------------|------------------------------------------------------------------------------|
 | **Sender API**     | - Sadece **WAL tabloları** destekler <br> - Çok hızlı, **real-time ingestion** için tasarlanmış |
 | **ADO.NET + Dapper** | - Hem **WAL** hem **non-WAL** tablolarıyla çalışır <br> - Normal **SQL** yazabilirsin (`SELECT`, `INSERT`, `UPDATE`, `JOIN` vs.) <br> - ORM kolaylığı sağlar |
+
+
+## QuestDB .NET Kullanım Yöntemleri Karşılaştırma
+
+| İşlem Türü                          | En Uygun Yöntem     | Açıklama |
+|-------------------------------------|---------------------|----------|
+| **INSERT (çok hızlı, akış)**        |  Sender API        | Line Protocol ile çok yüksek throughput sağlar. Özellikle IoT, sensör, log gibi sürekli veri akışlarında idealdir. |
+| **INSERT (az miktar, normal)**      |  ADO.NET + Dapper  | Küçük hacimli veri eklemeleri için uygundur. Kullanımı kolaydır ama Sender kadar hızlı değildir. |
+| **SELECT (arama, filtre, BETWEEN)** |  ADO.NET + Dapper  | PostgreSQL wire protocol üzerinden tam SQL sorgu desteği sunar. Aralık sorguları için en hızlı ve güvenilir yöntemdir. |
+| **Analitik sorgular (GROUP BY, JOIN, ORDER)** |  ADO.NET + Dapper | SQL tam desteği olduğu için karmaşık analizlerde tercih edilir. |
+| **Gerçek zamanlı stream yazma**     |  Sender API        | Gerçek zamanlı veri ingestion için en yüksek performansı sağlar. |
+
+---
+
+### Öneri
+- **Veri yazma (INSERT)** → **Sender API** (yüksek hacim için).  
+- **Veri okuma (SELECT, aralık sorgusu, analiz)** → **ADO.NET + Dapper**.  
 
 
 
