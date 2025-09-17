@@ -634,6 +634,8 @@ En sağlam yöntem → ADO.NET + Dapper.
 - **Veri yazma (INSERT)** → **Sender API** (yüksek hacim için).  
 - **Veri okuma (SELECT, aralık sorgusu, analiz)** → **ADO.NET + Dapper**.  
 
+(QuestDB'ye import etme) Yükleme yöntemleri: COPY FROM, REST API, Influx Line Protocol, PostgreSQL wire protokolü, Kafka/MQTT entegrasyonu.
+
 
 dotnet add package Dapper
 
