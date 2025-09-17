@@ -545,6 +545,55 @@ class Program
 }
 ```
 
+
+### Rest API + C# ile belirli bir tarih aralığını getirme ve süresi:
+
+```csharp
+
+using System;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        var client = new HttpClient();
+
+
+        var start = DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd HH:mm:ss");
+        var end   = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+
+
+        string sql = $"SELECT * FROM veriler WHERE tarih BETWEEN '{start}' AND '{end}' LIMIT 100";
+
+        var url = $"http://10.141.2.7:6587/exec?query={Uri.EscapeDataString(sql)}";
+
+        var sw = Stopwatch.StartNew();
+        var response = await client.GetAsync(url);
+        sw.Stop();
+
+        Console.WriteLine($"HTTP sorgu süresi: {sw.ElapsedMilliseconds} ms");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Sonuç örneği:");
+            Console.WriteLine(content);
+        }
+        else
+        {
+            Console.WriteLine($"Hata: {response.StatusCode}");
+            var errContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(errContent);
+        }
+    }
+}
+
+```
+
+
 En sağlam yöntem → ADO.NET + Dapper.
 
 ## QuestDB .NET Kullanım Yöntemleri
@@ -570,6 +619,10 @@ En sağlam yöntem → ADO.NET + Dapper.
 ### Öneri
 - **Veri yazma (INSERT)** → **Sender API** (yüksek hacim için).  
 - **Veri okuma (SELECT, aralık sorgusu, analiz)** → **ADO.NET + Dapper**.  
+
+
+dotnet add package Dapper
+
 
 
 
