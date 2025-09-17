@@ -282,6 +282,13 @@ QuestDB doğrudan C# için özel bir resmi client kütüphanesi sunmaz. Ancak ba
 docker run -p 9000:9000 -p 8812:8812 -p 9009:9009 questdb/questdb:latest
 ```
 
+
+#### Kalıcı kaydetme için
+```bash
+docker run -d --name questdb -p 9000:9000 -p 8812:8812 -p 9009:9009 -v C:\questdb_data:/var/lib/questdb/db -v C:\QuestDbDemo:/csv questdb/questdb:latest
+```
+
+
 #### 3- Ardından proje dizininize gidin ve paket eklemelerini yapın.
 
 ```bash
