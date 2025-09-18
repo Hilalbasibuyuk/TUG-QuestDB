@@ -608,6 +608,49 @@ class Program
 ```
 
 
+### QuestDB'de doğrudan `ALTER TABLE RENAME COLUMN` desteği yoktur. Bu nedenle sütun adlarını değiştirmek için tabloyu yeni isimlerle yeniden oluşturmak gerekir.  Aşağıdaki adımlar `test6` tablosu için örneklenmiştir:
+
+
+```sql
+
+CREATE TABLE test6_new AS (
+    SELECT 
+        f0 AS id,
+        f1 AS device_id,
+        f2 AS temperature,
+        f3 AS humidity,
+        f4 AS ts
+    FROM test6
+);
+
+DROP TABLE test6;
+
+RENAME TABLE test6_new TO test6;
+
+SELECT count(*) FROM test6
+
+```
+
+**Sırasıyla komutları bu şekilde çalıştırabiliriz. Bu sorgu ile yeni tabloda kayıtların eksiksiz (count ile)taşındığını doğrulayabiliriz.**
+
+
+
+### Sorgular genel olarak 5 ms gibi kısa süre almakta.
+
+```sql
+SELECT *
+FROM test6
+WHERE ts BETWEEN '2024-01-28T11:49:00.000Z' AND '2025-02-28T11:55:00.000Z';
+```
+
+```sql
+SELECT *
+FROM test6
+WHERE device_id = 1
+  AND ts BETWEEN '2025-02-28T11:49:00.000Z' AND '2025-02-28T12:00:00.000Z';
+```
+
+
 En sağlam yöntem → ADO.NET + Dapper.
 
 ## QuestDB .NET Kullanım Yöntemleri
