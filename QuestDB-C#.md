@@ -986,14 +986,12 @@ namespace QuestDbHttpDemo
 {
     class Program
     {
-        // AvgTemp için mapping
         public class AvgTempRow
         {
             public string? ts { get; set; }
             public double? avg_temp { get; set; }
         }
 
-        // Measurement mapping
         public class Measurement
         {
             public string? ts { get; set; }
@@ -1001,41 +999,29 @@ namespace QuestDbHttpDemo
             public double? temperature { get; set; }
         }
 
+        public class MinMaxTemp
+        {
+            public string? ts { get; set; }
+            public double? min { get; set; }
+            public double? max { get; set; }
+        }
+
         static async Task Main(string[] args)
         {
-            var baseUrl = "http://10.141.2.7:6587/exec"; // QuestDB HTTP endpoint
+            var baseUrl = "http://10.141.2.7:6587/exec"; 
             using var client = new HttpClient();
 
             Console.WriteLine("✅ HTTP ile bağlantı hazır");
 
             try
             {
-                // 1️⃣ SAMPLE BY 1m
-                string sqlSampleBy = "SELECT ts, avg(temperature) AS avg_temp FROM test6 SAMPLE BY 1m;";
-                var avgTemps = await QueryAsync<AvgTempRow>(client, baseUrl, sqlSampleBy);
-                Console.WriteLine("\n--- Avg Temperature SAMPLE BY 1m ---");
-                foreach (var r in avgTemps)
-                    Console.WriteLine($"{r.ts} -> {r.avg_temp:F2}");
-
-                // 2️⃣ Parametreli sorgu (timestamp parametreleri string olarak)
-                string sqlParam = @"
-                    SELECT ts, device_id, temperature
-                    FROM test6
-                    WHERE device_id = 1 AND ts BETWEEN '2025-02-28T11:49:00.000Z' AND '2025-02-28T12:00:00.000Z'
-                    ORDER BY ts ASC
-                    LIMIT 100;
-                ";
-                var measurements = await QueryAsync<Measurement>(client, baseUrl, sqlParam);
-                Console.WriteLine("\n--- Measurements for device 1 ---");
-                foreach (var m in measurements)
-                    Console.WriteLine($"{m.ts} | device:{m.device_id} | temp:{m.temperature:F2}");
-
-                // 3️⃣ LATEST ON ts PARTITION BY device_id
-                string sqlLatest = "SELECT * FROM test6 LATEST ON ts PARTITION BY device_id;";
-                var latest = await QueryAsync<Measurement>(client, baseUrl, sqlLatest);
-                Console.WriteLine("\n--- Latest Measurements per Device ---");
-                foreach (var l in latest)
-                    Console.WriteLine($"{l.ts} | device:{l.device_id} | temp:{l.temperature:F2}");
+                await RunCountCheck(client, baseUrl);
+                await RunSampleBy(client, baseUrl);
+                await RunWhereRanges(client, baseUrl);
+                await RunLatestOn(client, baseUrl);
+                await RunAsofJoin(client, baseUrl);
+                await RunMaterializedView(client, baseUrl);
+                await RunFillPolicies(client, baseUrl);
             }
             catch (Exception ex)
             {
@@ -1044,7 +1030,110 @@ namespace QuestDbHttpDemo
             }
         }
 
-        // Generic sorgu metodu (GET ile)
+        // 1️⃣ COUNT ile doğrulama
+        private static async Task RunCountCheck(HttpClient client, string baseUrl)
+        {
+            string sql = @"
+                SELECT count(*) 
+                FROM test6
+                WHERE ts BETWEEN '2024-01-28T11:49:00.000Z' AND '2025-02-28T11:55:00.000Z';
+            ";
+            var result = await QueryAsync<Measurement>(client, baseUrl, sql);
+            Console.WriteLine("\n--- Count Check ---");
+            foreach (var r in result)
+                Console.WriteLine($"Count: {r.temperature}");
+        }
+
+        // 2️⃣ SAMPLE BY min & max
+        private static async Task RunSampleBy(HttpClient client, string baseUrl)
+        {
+            string sql = "SELECT ts, min(temperature), max(temperature) FROM test6 SAMPLE BY 1h;";
+            var result = await QueryAsync<MinMaxTemp>(client, baseUrl, sql);
+            Console.WriteLine("\n--- SAMPLE BY 1h (min/max) ---");
+            foreach (var r in result)
+                Console.WriteLine($"{r.ts} -> min:{r.min} | max:{r.max}");
+        }
+
+        // 3️⃣ WHERE IN
+        private static async Task RunWhereRanges(HttpClient client, string baseUrl)
+{
+    // 🔹 Birden fazla zaman aralığını listeye ekliyoruz
+    var ranges = new List<(string start, string end)>
+    {
+        ("2025-02-28T11:49:00.000Z", "2025-02-28T12:00:00.000Z"),
+        ("2025-03-01T10:00:00.000Z", "2025-03-01T11:00:00.000Z"),
+        ("2025-03-02T08:00:00.000Z", "2025-03-02T09:00:00.000Z") // örnek ek aralık
+    };
+
+    // 🔹 SQL WHERE koşulunu dinamik oluşturuyoruz
+    var whereConditions = new List<string>();
+    foreach (var (start, end) in ranges)
+    {
+        whereConditions.Add($"(ts BETWEEN '{start}' AND '{end}')");
+    }
+    string whereClause = string.Join(" OR ", whereConditions);
+
+    string sql = $@"
+        SELECT *
+        FROM test6
+        WHERE {whereClause}
+        ORDER BY ts ASC;
+    ";
+
+    var result = await QueryAsync<Measurement>(client, baseUrl, sql);
+    Console.WriteLine("\n--- Dinamik WHERE RANGES ---");
+    foreach (var r in result)
+        Console.WriteLine($"{r.ts} | device:{r.device_id} | temp:{r.temperature}");
+}
+
+
+        // 4️⃣ LATEST ON ts PARTITION BY device_id
+        private static async Task RunLatestOn(HttpClient client, string baseUrl)
+        {
+            string sql = "SELECT * FROM test6 LATEST ON ts PARTITION BY device_id;";
+            var result = await QueryAsync<Measurement>(client, baseUrl, sql);
+            Console.WriteLine("\n--- Latest per Device ---");
+            foreach (var r in result)
+                Console.WriteLine($"{r.ts} | device:{r.device_id} | temp:{r.temperature}");
+        }
+
+        // 5️⃣ ASOF JOIN
+        private static async Task RunAsofJoin(HttpClient client, string baseUrl)
+        {
+            string sql = @"
+                SELECT a.ts, a.temperature, b.device_id
+                FROM test6 a
+                ASOF JOIN test6 b;
+            ";
+            var result = await QueryAsync<Measurement>(client, baseUrl, sql);
+            Console.WriteLine("\n--- ASOF JOIN ---");
+            foreach (var r in result)
+                Console.WriteLine($"{r.ts} | temp:{r.temperature} | device:{r.device_id}");
+        }
+
+        // 6️⃣ MATERIALIZED VIEW (örnek)
+        private static async Task RunMaterializedView(HttpClient client, string baseUrl)
+        {
+            string sql = @"
+                CREATE MATERIALIZED VIEW IF NOT EXISTS avg_temp_1m AS
+                SELECT ts, avg(temperature) AS avg_temp
+                FROM test6 SAMPLE BY 1m;
+            ";
+            await QueryAsync<AvgTempRow>(client, baseUrl, sql);
+            Console.WriteLine("\n✅ Materialized View oluşturuldu (avg_temp_1m)");
+        }
+
+        // 7️⃣ SAMPLE BY + FILL Politikaları
+        private static async Task RunFillPolicies(HttpClient client, string baseUrl)
+        {
+            string sql = "SELECT ts, avg(temperature) FROM test6 SAMPLE BY 1m FILL(LINEAR);";
+            var result = await QueryAsync<AvgTempRow>(client, baseUrl, sql);
+            Console.WriteLine("\n--- SAMPLE BY 1m FILL(LINEAR) ---");
+            foreach (var r in result)
+                Console.WriteLine($"{r.ts} -> {r.avg_temp}");
+        }
+
+        // 🔹 Generic sorgu metodu
         private static async Task<List<T>> QueryAsync<T>(HttpClient client, string baseUrl, string sql)
         {
             var url = baseUrl + "?query=" + Uri.EscapeDataString(sql);
@@ -1073,13 +1162,9 @@ namespace QuestDbHttpDemo
                         else if (val.ValueKind == JsonValueKind.Number)
                         {
                             if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
-                            {
                                 prop.SetValue(obj, val.GetDouble());
-                            }
                             else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
-                            {
                                 prop.SetValue(obj, val.GetInt32());
-                            }
                         }
                     }
                     rows.Add(obj);
@@ -1089,7 +1174,6 @@ namespace QuestDbHttpDemo
         }
     }
 }
-
 
 
 
