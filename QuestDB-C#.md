@@ -624,6 +624,7 @@ CREATE TABLE test6_new AS (
 ) TIMESTAMP(ts);
 
 
+
 DROP TABLE test6;
 
 RENAME TABLE test6_new TO test6;
@@ -631,6 +632,22 @@ RENAME TABLE test6_new TO test6;
 SELECT count(*) FROM test6
 
 ```
+
+### WAL yapısında nasıl tablo oluşur? "PARTITION BY DAY WAL ekleriz tablo sonuna. Tabloyu oluştururken eklemek zorundayız, yoksa yeni tabloyu WALL ile aşağıdaki şekilde oluşturup mevcut tabloyu geçiririz"
+
+```sql
+CREATE TABLE test6_new AS (
+    SELECT 
+        f0 AS id,
+        f1 AS device_id,
+        f2 AS temperature,
+        f3 AS humidity,
+        cast(f4 as TIMESTAMP) AS ts
+    FROM test6
+) TIMESTAMP(ts) PARTITION BY DAY WAL;
+```
+
+
 
 **Sırasıyla komutları bu şekilde çalıştırabiliriz. Bu sorgu ile yeni tabloda kayıtların eksiksiz (count ile)taşındığını doğrulayabiliriz.**
 
@@ -651,6 +668,104 @@ WHERE device_id = 1
   AND ts BETWEEN '2025-02-28T11:49:00.000Z' AND '2025-02-28T12:00:00.000Z';
 ```
 
+
+### SAMPLE BY ile zaman serisi verilerinde downsampling (örnekleme) yapıyoruz:
+
+```sql
+SELECT ts, min(temperature), max(temperature)
+FROM test6
+SAMPLE BY 1h;
+```
+
+```sql
+SELECT ts, avg(temperature) AS avg_temp
+FROM test6
+SAMPLE BY 1m;
+```
+**Burada her 1 dakikalık pencere için avg_temp hesaplanır.**
+
+
+### WHERE IN ile birden fazla zaman aralığında arama yaparız.
+
+```sql
+SELECT *
+FROM test6
+WHERE ts IN '2025-02-28T11:49:00.000Z;2025-02-28T12:00:00.000Z',
+              '2025-03-01T10:00:00.000Z;2025-03-01T11:00:00.000Z';
+```
+
+### LATEST ON ile her cihaz için en güncel kaydı getiririz.
+
+```sql
+SELECT *
+FROM test6
+LATEST ON ts PARTITION BY device_id;
+```
+
+### ASOF JOIN ile zaman serisi tablolarını yakın zamana göre joinleriz.
+
+```sql
+SELECT a.ts, a.temperature, b.data_id
+FROM test6 a
+ASOF JOIN veriler b;
+```
+
+**Burada test6’daki zaman damgasına en yakın veriler tablosundaki kayıt eşleşir.**
+
+
+
+### Materialized Views (Maddeleştirilmiş Görünümler) ile  (Tablo WAL yapısında olmak zorunda. Çünkü materialized view güncel verileri takip edebilmek için WAL özelliğine ihtiyaç duyuyor.)
+
+```sql
+CREATE MATERIALIZED VIEW avg_temp_1m AS
+SELECT ts, avg(temperature) AS avg_temp
+FROM test6
+SAMPLE BY 1m;
+```
+**Örneğin sıcaklıkların dakikalık ortalamasını saklamak için kullanırız.  MV sayesinde sürekli hesap yapmak zorunda kalmayız → sorgular çok daha hızlı çalışır.**
+
+
+
+### SAMPLE BY + Fill Politikaları: QuestDB’de eksik verileri doldurma özelliği vardır:
+
+```sql
+SELECT ts, avg(temperature)
+FROM test6
+SAMPLE BY 1m FILL(LINEAR);
+```
+
+
+**Bu, zaman serilerinde eksik veri olduğunda çok faydalı.**
+
+- FILL(NONE) → boş bırakır
+
+- FILL(PREV) → önceki değeri taşır
+
+- FILL(LINEAR) → lineer interpolasyon yapar
+
+- FILL(VALUE x) → sabit değer atar
+
+
+### Normalde bunu yaparız en güncel verileri almak için fakat aşağıdaki yöntem daha hızlı çalışır.
+
+```sql
+SELECT device_id, ts, temperature
+FROM (
+    SELECT device_id, ts, temperature,
+           ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY ts DESC) AS rn
+    FROM test6
+)
+WHERE rn = 1;
+```
+
+
+### LATEST ON ts PARTITION BY key, QuestDB’de zaman serisi tablolarında, her grup için en güncel satırı almak için kullanılır.
+
+```sql
+SELECT *
+FROM test6
+LATEST ON ts PARTITION BY device_id;
+```
 
 En sağlam yöntem → ADO.NET + Dapper.
 
@@ -682,8 +797,6 @@ En sağlam yöntem → ADO.NET + Dapper.
 
 
 dotnet add package Dapper
-
-
 
 
 
