@@ -1121,10 +1121,6 @@ namespace QuestDbHttpDemo
 (QuestDB'ye import etme) Yükleme yöntemleri: COPY FROM, REST API, Influx Line Protocol, PostgreSQL wire protokolü, Kafka/MQTT entegrasyonu.
 
 
-
-
-
-
 # 📚 Kaynakça
 
 - [QuestDB Demo](https://demo.questdb.io/index.html) – Online demo ortamı  
