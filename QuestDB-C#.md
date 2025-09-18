@@ -1183,6 +1183,10 @@ namespace QuestDbHttpDemo
 
 
 ```
+
+**Bu kodda veriler fazla olduğu için kod hatalı çalışabilir.**
+
+
 ## QuestDB .NET Kullanım Yöntemleri
 
 | Yöntem             | Özellikler                                                                 |
