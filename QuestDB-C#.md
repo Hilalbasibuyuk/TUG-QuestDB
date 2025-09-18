@@ -10,6 +10,7 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 - **Yüksek Verim (Throughput) ve Düşük Gecikme (Latency):** Tek bir sunucuda saniyede milyonlarca satırlık veri ekleme kapasitesine sahiptir. Veriler milisaniyeler içinde sorgulanabilir hale gelir. 
 
 
+
 ### Ana özellikleri şunlardır:
 - Çok hızlı yazma ve okuma (milyonlarca kayıt/saniye işleyebilir).
 - Kolay entegrasyon (Postgres wire protocol, REST API, InfluxDB line protocol desteği).
@@ -18,6 +19,10 @@ QuestDB diğer veri tabanlarından çok daha farklı bir yapıya sahiptir ve gel
 - Yüksek performanslı veri çoğaltma ve sıra dışı dizinleme
 - Yüksek veri kardinalitesi performans düşüşüne yol açmayacaktır.(Kardinalite, bir kümeyi oluşturan farklı değer sayısını gösteren bir veri niteliğidir. Yüksek kardinaliteli verilere sahip olmak, veri kümesinde çok sayıda benzersiz değer olduğu anlamına gelir.)
 - Donanım verimliliği (Sensörler ve Raspberry Pi dahil olmak üzere çok küçük donanımlarda güçlü, maliyet tasarrufu sağlayan performans.)
+
+
+!! **InfluxDB**, InfluxData şirketi tarafından geliştirilen bir zaman serisi veritabanıdır. Operasyon izleme, uygulama ölçümleri, Nesnelerin İnterneti sensör verileri ve gerçek zamanlı analiz gibi alanlarda zaman serisi verilerinin depolanması ve alınması için kullanılır. Ayrıca Grafitten veri işleme desteği de vardır.
+
 
 
 **QuestDB'de yüksek kardinalite ile başa çıkma**
