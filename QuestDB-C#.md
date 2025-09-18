@@ -800,17 +800,29 @@ dotnet add package Dapper
 
 
 
-# KAYNAKÇA
-- https://demo.questdb.io/index.html    -> Demo
-- https://questdb.com/download/         -> Download QuestDB
-- https://github.com/questdb             -> QuestDB GitHub address
-- https://questdb.com/dashboards/crypto/    -> Canlı crypto verileri
-- https://questdb.com/dashboards/fx-orderbook/    -> Canlı fx-orderbook verileri
-- https://grafana.com/grafana/plugins/questdb-questdb-datasource/    -> Grafana kullanımı
-- https://questdb.com/docs/third-party-tools/grafana/   -> Grafana kullanımı
-- https://demo.questdb.io/index.html   -> Görselleştirme yapılabilir bu yapı kullanılarak
-- https://questdb.com/docs/reference/sql/datatypes/   -> QuestDB veri yapıları listesi
-- https://questdb.com/docs/reference/sql/overview/#postgresql  -> Query & SQL Overview (SQL sorguları)
-- https://questdb.com/docs/reference/api/ilp/overview/    -> ILP protokolü detayları. kullanıcam.
-- https://questdb.com/docs/clients/ingest-dotnet/     -> C# ile QuestDB
-- https://medium.com/@sumerburak/questdb-ile-zaman-yolculu%C4%9Funa-%C3%A7%C4%B1k%C4%B1yoruz-net-ile-e%C4%9Flenceli-bir-macera-c7bea81d4af1   -> QuestDB ile C# bağlama kısmı için detaylı bilgi
+# 📚 Kaynakça
+
+- [QuestDB Demo](https://demo.questdb.io/index.html) – Online demo ortamı  
+- [QuestDB Download](https://questdb.com/download/) – QuestDB indirme sayfası  
+- [QuestDB GitHub](https://github.com/questdb) – Resmî GitHub adresi  
+
+## 🔹 Canlı Dashboard Örnekleri
+- [Crypto Dashboard](https://questdb.com/dashboards/crypto/) – Canlı kripto verileri  
+- [FX Orderbook Dashboard](https://questdb.com/dashboards/fx-orderbook/) – Canlı FX Orderbook verileri  
+
+## 🔹 Grafana Entegrasyonu
+- [Grafana Plugin (QuestDB Datasource)](https://grafana.com/grafana/plugins/questdb-questdb-datasource/)  
+- [Grafana Kullanımı Dokümantasyon](https://questdb.com/docs/third-party-tools/grafana/)  
+- [QuestDB Demo (Görselleştirme)](https://demo.questdb.io/index.html)  
+
+## 🔹 SQL & Veri Yapıları
+- [QuestDB Veri Tipleri](https://questdb.com/docs/reference/sql/datatypes/)  
+- [SQL Overview](https://questdb.com/docs/reference/sql/overview/#postgresql)  
+
+## 🔹 Ingestion & API
+- [ILP Protocol Overview](https://questdb.com/docs/reference/api/ilp/overview/)  
+
+## 🔹 .NET / C# Kullanımı
+- [QuestDB .NET Client](https://questdb.com/docs/clients/ingest-dotnet/)  
+- [Medium Yazısı: QuestDB ile Zaman Yolculuğu (C#)](https://medium.com/@sumerburak/questdb-ile-zaman-yolculu%C4%9Funa-%C3%A7%C4%B1k%C4%B1yoruz-net-ile-e%C4%9Flenceli-bir-macera-c7bea81d4af1)  
+
