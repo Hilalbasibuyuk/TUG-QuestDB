@@ -619,9 +619,10 @@ CREATE TABLE test6_new AS (
         f1 AS device_id,
         f2 AS temperature,
         f3 AS humidity,
-        f4 AS ts
+        cast(f4 as TIMESTAMP) AS ts
     FROM test6
-);
+) TIMESTAMP(ts);
+
 
 DROP TABLE test6;
 
