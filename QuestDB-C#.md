@@ -1164,7 +1164,13 @@ namespace QuestDbHttpDemo
                             if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
                                 prop.SetValue(obj, val.GetDouble());
                             else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
-                                prop.SetValue(obj, val.GetInt32());
+                            {
+                                if (val.ValueKind == JsonValueKind.Number)
+                                    prop.SetValue(obj, val.GetInt32());
+                                else if (val.ValueKind == JsonValueKind.String && int.TryParse(val.GetString(), out int intVal))
+                                    prop.SetValue(obj, intVal);
+                            }
+
                         }
                     }
                     rows.Add(obj);
@@ -1174,7 +1180,6 @@ namespace QuestDbHttpDemo
         }
     }
 }
-
 
 
 ```
