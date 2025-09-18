@@ -971,6 +971,129 @@ namespace QuestDbDemo
 
 ```
 
+
+### SENDER API Kod Örneği:
+
+```charp
+
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Text.Json;
+
+namespace QuestDbHttpDemo
+{
+    class Program
+    {
+        // AvgTemp için mapping
+        public class AvgTempRow
+        {
+            public string? ts { get; set; }
+            public double? avg_temp { get; set; }
+        }
+
+        // Measurement mapping
+        public class Measurement
+        {
+            public string? ts { get; set; }
+            public int? device_id { get; set; }
+            public double? temperature { get; set; }
+        }
+
+        static async Task Main(string[] args)
+        {
+            var baseUrl = "http://10.141.2.7:6587/exec"; // QuestDB HTTP endpoint
+            using var client = new HttpClient();
+
+            Console.WriteLine("✅ HTTP ile bağlantı hazır");
+
+            try
+            {
+                // 1️⃣ SAMPLE BY 1m
+                string sqlSampleBy = "SELECT ts, avg(temperature) AS avg_temp FROM test6 SAMPLE BY 1m;";
+                var avgTemps = await QueryAsync<AvgTempRow>(client, baseUrl, sqlSampleBy);
+                Console.WriteLine("\n--- Avg Temperature SAMPLE BY 1m ---");
+                foreach (var r in avgTemps)
+                    Console.WriteLine($"{r.ts} -> {r.avg_temp:F2}");
+
+                // 2️⃣ Parametreli sorgu (timestamp parametreleri string olarak)
+                string sqlParam = @"
+                    SELECT ts, device_id, temperature
+                    FROM test6
+                    WHERE device_id = 1 AND ts BETWEEN '2025-02-28T11:49:00.000Z' AND '2025-02-28T12:00:00.000Z'
+                    ORDER BY ts ASC
+                    LIMIT 100;
+                ";
+                var measurements = await QueryAsync<Measurement>(client, baseUrl, sqlParam);
+                Console.WriteLine("\n--- Measurements for device 1 ---");
+                foreach (var m in measurements)
+                    Console.WriteLine($"{m.ts} | device:{m.device_id} | temp:{m.temperature:F2}");
+
+                // 3️⃣ LATEST ON ts PARTITION BY device_id
+                string sqlLatest = "SELECT * FROM test6 LATEST ON ts PARTITION BY device_id;";
+                var latest = await QueryAsync<Measurement>(client, baseUrl, sqlLatest);
+                Console.WriteLine("\n--- Latest Measurements per Device ---");
+                foreach (var l in latest)
+                    Console.WriteLine($"{l.ts} | device:{l.device_id} | temp:{l.temperature:F2}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Hata: {ex.Message}");
+                Console.WriteLine($"❌ Stack Trace: {ex.StackTrace}");
+            }
+        }
+
+        // Generic sorgu metodu (GET ile)
+        private static async Task<List<T>> QueryAsync<T>(HttpClient client, string baseUrl, string sql)
+        {
+            var url = baseUrl + "?query=" + Uri.EscapeDataString(sql);
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(json);
+            var rows = new List<T>();
+
+            if (doc.RootElement.TryGetProperty("dataset", out var dataset))
+            {
+                var properties = typeof(T).GetProperties();
+                foreach (var row in dataset.EnumerateArray())
+                {
+                    var obj = Activator.CreateInstance<T>();
+                    for (int i = 0; i < row.GetArrayLength() && i < properties.Length; i++)
+                    {
+                        var prop = properties[i];
+                        var val = row[i];
+
+                        if (val.ValueKind == JsonValueKind.String)
+                        {
+                            prop.SetValue(obj, val.GetString());
+                        }
+                        else if (val.ValueKind == JsonValueKind.Number)
+                        {
+                            if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
+                            {
+                                prop.SetValue(obj, val.GetDouble());
+                            }
+                            else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
+                            {
+                                prop.SetValue(obj, val.GetInt32());
+                            }
+                        }
+                    }
+                    rows.Add(obj);
+                }
+            }
+            return rows;
+        }
+    }
+}
+
+
+
+
+```
 ## QuestDB .NET Kullanım Yöntemleri
 
 | Yöntem             | Özellikler                                                                 |
