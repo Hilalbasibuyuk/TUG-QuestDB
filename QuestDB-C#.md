@@ -767,7 +767,209 @@ FROM test6
 LATEST ON ts PARTITION BY device_id;
 ```
 
-En sağlam yöntem → ADO.NET + Dapper.
+## ADO.NET + Dapper 
+
+
+### PGWire portu olup olmadığını anlamak için:
+
+
+```sql
+Test-NetConnection 10.141.2.7 -Port 6588 
+```
+
+#### ÇIKTIDA TcpTestSucceeded : True kısmı false ise değildir:
+
+PS C:\Users\hilal> Test-NetConnection 10.141.2.7 -Port 6588
+
+
+ComputerName     : 10.141.2.7
+RemoteAddress    : 10.141.2.7
+RemotePort       : 6588
+InterfaceAlias   : Wi-Fi
+SourceAddress    : 192.168.137.94
+TcpTestSucceeded : True
+
+
+
+### Gerekli paketler
+
+```sql
+dotnet add package Npgsql
+dotnet add package Dapper
+```
+
+### Kod örneği
+
+```charp
+
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Dapper;
+using Npgsql;
+
+namespace QuestDbDemo
+{
+    class Program
+    {
+        public class AvgTempRow
+        {
+            public string Ts { get; set; }
+            public double AvgTemp { get; set; }
+        }
+
+        public class Measurement
+        {
+            public string Ts { get; set; }
+            public int DeviceId { get; set; }
+            public double Temperature { get; set; }
+        }
+
+        public class TempRangeRow
+        {
+            public string Ts { get; set; }
+            public double MinTemp { get; set; }
+            public double MaxTemp { get; set; }
+        }
+
+        static async Task Main(string[] args)
+        {
+            var connString = "Host=10.141.2.7;Port=6588;Username=admin;Password=quest;Database=qdb;SSL Mode=Disable;Pooling=true;Maximum Pool Size=50;CommandTimeout=30;TimeZone=UTC";
+            
+            await using var dataSource = NpgsqlDataSource.Create(connString);
+            await using var conn = await dataSource.OpenConnectionAsync();
+
+            Console.WriteLine("✅ Bağlantı başarılı!");
+
+            try
+            {
+                // Mevcut sorgular
+                await RunSampleByQuery(conn);
+                await RunParameterizedQuery(conn);
+                await RunLatestOnQuery(conn);
+
+                Console.WriteLine("\n" + new string('-', 30) + "\n");
+                Console.WriteLine("### Yeni Sorgu Örnekleri ###");
+
+                // Yeni eklenen sorgular
+                await RunSampleByWithMinMaxQuery(conn);
+                await RunLatestOnWithPartitionQuery(conn);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Hata: {ex.Message}");
+                Console.WriteLine($"❌ Stack Trace: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// `SAMPLE BY` ile dakikalık ortalama sıcaklık sorgusu.
+        /// </summary>
+        private static async Task RunSampleByQuery(NpgsqlConnection conn)
+        {
+            var sqlAvg = "SELECT ts::text AS Ts, avg(temperature) AS AvgTemp FROM test6 SAMPLE BY 1m;";
+            var avgRows = await conn.QueryAsync<AvgTempRow>(sqlAvg);
+            Console.WriteLine("\n--- Avg Temperature SAMPLE BY 1m ---");
+            foreach (var r in avgRows)
+            {
+                Console.WriteLine($"{r.Ts} -> {r.AvgTemp:F2}");
+            }
+        }
+
+        /// <summary>
+        /// Belirli cihaz ve zaman aralığı için parametreli sorgu.
+        /// </summary>
+       private static async Task RunParameterizedQuery(NpgsqlConnection conn)
+{
+    var sqlParams = @"
+        SELECT 
+            ts::text AS Ts,
+            device_id AS DeviceId, 
+            temperature AS Temperature
+        FROM test6
+        WHERE device_id = @DeviceId AND ts BETWEEN @From AND @To
+        ORDER BY ts ASC
+        LIMIT @Limit;";
+
+    var parameters = new DynamicParameters();
+    parameters.Add("@DeviceId", 1);
+    parameters.Add("@Limit", 100);
+    parameters.Add("@From", DateTime.Parse("2025-02-28T11:49:00Z").ToUniversalTime(), System.Data.DbType.DateTime);
+    parameters.Add("@To", DateTime.Parse("2025-02-28T12:00:00Z").ToUniversalTime(), System.Data.DbType.DateTime);
+
+    var measurements = await conn.QueryAsync<Measurement>(sqlParams, parameters);
+
+    Console.WriteLine("\n--- Measurements for device 1 ---");
+    foreach (var m in measurements)
+    {
+        Console.WriteLine($"{m.Ts} | device:{m.DeviceId} | temp:{m.Temperature:F2}");
+    }
+}
+
+        /// <summary>
+        /// Her cihaz için en son ölçümü getiren `LATEST ON` sorgusu.
+        /// </summary>
+        private static async Task RunLatestOnQuery(NpgsqlConnection conn)
+        {
+            var sqlLatest = @"
+                SELECT 
+                    ts::text AS Ts,
+                    device_id AS DeviceId, 
+                    temperature AS Temperature 
+                FROM test6 
+                LATEST ON ts 
+                PARTITION BY device_id;";
+            
+            var latest = await conn.QueryAsync<Measurement>(sqlLatest);
+            Console.WriteLine("\n--- Latest Measurements per Device ---");
+            foreach (var l in latest)
+            {
+                Console.WriteLine($"{l.Ts} | device:{l.DeviceId} | temp:{l.Temperature:F2}");
+            }
+        }
+        
+        // --- Yeni eklenen metotlar ---
+
+        /// <summary>
+        /// `SAMPLE BY` ile saatlik en düşük ve en yüksek sıcaklık sorgusu.
+        /// </summary>
+        private static async Task RunSampleByWithMinMaxQuery(NpgsqlConnection conn)
+        {
+            var sql = "SELECT ts::text AS Ts, min(temperature) AS MinTemp, max(temperature) AS MaxTemp FROM test6 SAMPLE BY 1h;";
+            var tempRows = await conn.QueryAsync<TempRangeRow>(sql);
+
+            Console.WriteLine("\n--- Min and Max Temperature SAMPLE BY 1h ---");
+            foreach (var r in tempRows)
+            {
+                Console.WriteLine($"{r.Ts} -> Min: {r.MinTemp:F2}, Max: {r.MaxTemp:F2}");
+            }
+        }
+
+        /// <summary>
+        /// `LATEST ON` ile her cihaz için en güncel veriyi getiren sorgu.
+        /// </summary>
+        private static async Task RunLatestOnWithPartitionQuery(NpgsqlConnection conn)
+        {
+            var sql = @"
+                SELECT 
+                    ts::text AS Ts,
+                    device_id AS DeviceId, 
+                    temperature AS Temperature
+                FROM test6
+                LATEST ON ts PARTITION BY device_id;";
+
+            var latestMeasurements = await conn.QueryAsync<Measurement>(sql);
+
+            Console.WriteLine("\n--- LATEST ON per device_id ---");
+            foreach (var m in latestMeasurements)
+            {
+                Console.WriteLine($"{m.Ts} | device:{m.DeviceId} | temp:{m.Temperature:F2}");
+            }
+        }
+    }
+}
+
+```
 
 ## QuestDB .NET Kullanım Yöntemleri
 
@@ -796,7 +998,7 @@ En sağlam yöntem → ADO.NET + Dapper.
 (QuestDB'ye import etme) Yükleme yöntemleri: COPY FROM, REST API, Influx Line Protocol, PostgreSQL wire protokolü, Kafka/MQTT entegrasyonu.
 
 
-dotnet add package Dapper
+
 
 
 
@@ -825,4 +1027,3 @@ dotnet add package Dapper
 ## 🔹 .NET / C# Kullanımı
 - [QuestDB .NET Client](https://questdb.com/docs/clients/ingest-dotnet/)  
 - [Medium Yazısı: QuestDB ile Zaman Yolculuğu (C#)](https://medium.com/@sumerburak/questdb-ile-zaman-yolculu%C4%9Funa-%C3%A7%C4%B1k%C4%B1yoruz-net-ile-e%C4%9Flenceli-bir-macera-c7bea81d4af1)  
-
