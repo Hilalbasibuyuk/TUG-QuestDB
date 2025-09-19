@@ -800,12 +800,12 @@ dotnet add package Dapper
 ### Kod örneği
 
 ```charp
-
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Dapper;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace QuestDbDemo
 {
@@ -876,34 +876,57 @@ namespace QuestDbDemo
         }
 
         /// <summary>
-        /// Belirli cihaz ve zaman aralığı için parametreli sorgu.
+        /// Parametreli sorgu için NpgsqlParameter kullanan özel sınıf.
         /// </summary>
-       private static async Task RunParameterizedQuery(NpgsqlConnection conn)
-{
-    var sqlParams = @"
-        SELECT 
-            ts::text AS Ts,
-            device_id AS DeviceId, 
-            temperature AS Temperature
-        FROM test6
-        WHERE device_id = @DeviceId AND ts BETWEEN @From AND @To
-        ORDER BY ts ASC
-        LIMIT @Limit;";
+        private class NpgsqlTimestampParams : SqlMapper.IDynamicParameters
+        {
+            public int DeviceId { get; set; }
+            public int Limit { get; set; }
+            public DateTime? From { get; set; }
+            public DateTime? To { get; set; }
 
-    var parameters = new DynamicParameters();
-    parameters.Add("@DeviceId", 1);
-    parameters.Add("@Limit", 100);
-    parameters.Add("@From", DateTime.Parse("2025-02-28T11:49:00Z").ToUniversalTime(), System.Data.DbType.DateTime);
-    parameters.Add("@To", DateTime.Parse("2025-02-28T12:00:00Z").ToUniversalTime(), System.Data.DbType.DateTime);
+            public void AddParameters(System.Data.IDbCommand command, SqlMapper.Identity identity)
+            {
+                if (command is NpgsqlCommand npgCmd)
+                {
+                    npgCmd.Parameters.Add(new NpgsqlParameter("DeviceId", NpgsqlDbType.Integer) { Value = DeviceId });
+                    npgCmd.Parameters.Add(new NpgsqlParameter("Limit", NpgsqlDbType.Integer) { Value = Limit });
+                    npgCmd.Parameters.Add(new NpgsqlParameter("From", NpgsqlDbType.TimestampTz) { Value = (object)From ?? DBNull.Value });
+                    npgCmd.Parameters.Add(new NpgsqlParameter("To", NpgsqlDbType.TimestampTz) { Value = (object)To ?? DBNull.Value });
+                }
+            }
+        }
 
-    var measurements = await conn.QueryAsync<Measurement>(sqlParams, parameters);
+        /// <summary>
+        /// Belirli cihaz ve zaman aralığı için parametreli sorgu (QuestDB uyumlu).
+        /// </summary>
+        private static async Task RunParameterizedQuery(NpgsqlConnection conn)
+        {
+            var from = "2025-02-28T11:49:00.000000Z";
+            var to   = "2025-02-28T12:00:00.000000Z";
 
-    Console.WriteLine("\n--- Measurements for device 1 ---");
-    foreach (var m in measurements)
-    {
-        Console.WriteLine($"{m.Ts} | device:{m.DeviceId} | temp:{m.Temperature:F2}");
-    }
-}
+            var sqlParams = $@"
+                SELECT 
+                    ts::text AS Ts,
+                    device_id AS DeviceId, 
+                    temperature AS Temperature
+                FROM test6
+                WHERE device_id = 1
+                AND ts BETWEEN '{from}' AND '{to}'
+                ORDER BY ts ASC
+                LIMIT 100;";
+
+            var measurements = await conn.QueryAsync<Measurement>(sqlParams);
+
+            Console.WriteLine("\n--- Measurements for device 1 ---");
+            foreach (var m in measurements)
+            {
+                Console.WriteLine($"{m.Ts} | device:{m.DeviceId} | temp:{m.Temperature:F2}");
+            }
+        }
+
+
+
 
         /// <summary>
         /// Her cihaz için en son ölçümü getiren `LATEST ON` sorgusu.
@@ -967,7 +990,6 @@ namespace QuestDbDemo
         }
     }
 }
-
 ```
 
 
