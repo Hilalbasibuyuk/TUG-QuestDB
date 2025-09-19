@@ -400,6 +400,7 @@ Bu yöntem JSON döndürür, sen de JSON parse ederek C# objelerine dönüştür
 
 ### QuestDB'nin, InfluxDB line protocol ile veri kabul ettiğini öğrenmiştik. Bu durumda C#’ta UDP/TCP soketi açıp metin formatında veri gönderebilirsin.(Line Protocol (UDP/TCP ile Veri Yazma) (Örnekteki UDP))
 
+### Örnek: Amacımız C# kullanarak bir sensör verisini UDP üzerinden QuestDB’ye (veya Line Protocol kabul eden bir veritabanına) göndermek.
 
  ```csharp
 using System.Net.Sockets;
